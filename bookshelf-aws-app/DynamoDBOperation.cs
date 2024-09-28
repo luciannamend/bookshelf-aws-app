@@ -111,14 +111,13 @@ namespace bookshelf_aws_app
             try
             {
                 await client.UpdateItemAsync(updateItemRequest);
-                MessageBox.Show("UserName and Password added successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("UserName and Password created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to add attributes: {ex.Message}");
+                Console.WriteLine($"Failed to create: {ex.Message}");
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
 
             //// Create a new user object
             //User user = new User
@@ -195,17 +194,75 @@ namespace bookshelf_aws_app
                 Console.WriteLine("User has been deleted");
         }
 
-        //public async Task CRUDOperations()
-        //{     
-        //    ////ProductCatalog table
-        //    //Book myBook = new Book
-        //    //{
-        //    //    ISBN = "999-000001",
-        //    //    Title = "AWS Certified Developer Guide: architecture  ",
-        //    //    BookAuthors = new List<string> { "Tong Kim", "Cindy Smith" },
-        //    //    CoverPage = "The cover page"
-        //    //};
-        //    //await context.SaveAsync(myBook);
-        //}
+        public async Task CreateBookTable() 
+        {          
+            string tableName = "Book";
+
+            // Check if the table already exists
+            var tables = await client.ListTablesAsync();
+            if (tables.TableNames.Contains(tableName))
+            {
+                return; // Exit if the table already exists
+            }
+
+            CreateTableRequest request = new CreateTableRequest
+            {
+                TableName = tableName,
+                AttributeDefinitions = new List<AttributeDefinition>
+                {
+                    new AttributeDefinition
+                    {
+                        AttributeName="ISBN",
+                        AttributeType="S"
+                    }
+                },
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement
+                    {
+                        AttributeName="ISBN",
+                        KeyType="HASH"
+                    }
+                },
+                BillingMode = BillingMode.PROVISIONED,
+                ProvisionedThroughput = new ProvisionedThroughput
+                {
+                    ReadCapacityUnits = 2,
+                    WriteCapacityUnits = 1
+                }
+            };
+
+            try
+            {
+                var response = await client.CreateTableAsync(request);
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Table created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                };
+
+            }
+            catch (InternalServerErrorException iee)
+            {
+                MessageBox.Show("An error occurred on the server side ", iee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (LimitExceededException lee)
+            {
+                MessageBox.Show("you are creating a table with one or more secondary indexes+ ", lee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task CreateBook(string isbn, string title, List<string> authors)
+        {
+            //ProductCatalog table
+            Book myBook = new Book
+            {
+                ISBN = "999-000001",
+                Title = "AWS Certified Developer Guide: architecture  ",
+                BookAuthors = new List<string> { "Tong Kim", "Cindy Smith" },
+                CoverPage = "The cover page"
+            };
+
+            await context.SaveAsync(myBook);
+        }
     }
 }

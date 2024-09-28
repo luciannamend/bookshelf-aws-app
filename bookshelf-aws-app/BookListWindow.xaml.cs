@@ -19,9 +19,17 @@ namespace bookshelf_aws_app
     /// </summary>
     public partial class BookListWindow : Window
     {
+        DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         public BookListWindow()
         {
             InitializeComponent();
+            InitializeDynamoDB();
         }
+
+        private async void InitializeDynamoDB()
+        {
+            await dynamoDBOperation.CreateBookTable();
+        }
+
     }
 }

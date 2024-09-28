@@ -37,6 +37,11 @@ namespace bookshelf_aws_app
             String password = UserPasswordText.Text;
             String id = Guid.NewGuid().ToString();
 
+            //  TODO:
+            //  CHECK IF THE USERNAME ALREADY EXISTS
+            //  IF YES, SHOW MESSAGE 
+            //  ELSE CREATE THE USER
+
             await dynamoDBOperation.CreateUser(id, username, password);
         }
 
