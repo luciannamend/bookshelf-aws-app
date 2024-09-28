@@ -20,5 +20,16 @@ namespace bookshelf_aws_app
         {
             InitializeComponent();
         }
+
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Validate the user credentials
+
+
+            // If valid, open the BookListWindow
+            BookListWindow bookListWindow = new BookListWindow();
+            bookListWindow.Show();
+            this.Close();
+        }
     }
 }

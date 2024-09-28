@@ -6,7 +6,21 @@
         xmlns:local="clr-namespace:bookshelf_aws_app"
         mc:Ignorable="d"
         Title="eBook Reader" Height="450" Width="800">
-    <Grid>
-
+    <Grid Width="794" Height="437">
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FFF7E8F7" Offset="0.086"/>
+                <GradientStop Color="#FFFFD4FF" Offset="0.336"/>
+                <GradientStop Color="#FFFDE9F5" Offset="1"/>
+                <GradientStop Color="#FFF9F1F9" Offset="0.148"/>
+                <GradientStop Color="#FFF8EFF8" Offset="0.242"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <TextBlock HorizontalAlignment="Left" Margin="260,105,0,0" TextWrapping="Wrap" Text="Amazon DynamoDB Service" VerticalAlignment="Top" FontSize="22" Foreground="#FF716969"/>
+        <Label Content="User Name" Width="93" Height="31" Margin="0,0,403,0" FontSize="16" Foreground="#FF695F5F"/>
+        <TextBox x:Name="UserNameText" Width="350" Height="35" FontSize="16" Margin="60,0,0,0"/>
+        <Label Content="Password" Width="77" Height="31" Margin="0,100,403,0" FontSize="16" Foreground="#FF675A5A"/>
+        <TextBox x:Name="UserPasswordText" Width="350" Height="35" FontSize="16" Margin="59,99,0,0"/>
+        <Button x:Name="LoginButton" Content="Login" Width="100" Height="35" FontSize="16" Margin="0,250,0,0" Background="#FF936AC7" BorderBrush="#FFFFFDFD" Foreground="#FFFBF9F9" Click="LoginButton_Click"/>
     </Grid>
 </Window>
