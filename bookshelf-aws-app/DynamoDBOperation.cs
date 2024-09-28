@@ -66,10 +66,11 @@ namespace bookshelf_aws_app
             try
             {
                 var response = await client.CreateTableAsync(request);
-                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK) 
-                {
-                    MessageBox.Show("Table created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                };
+
+                //if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                //{
+                //    MessageBox.Show("Table created successfully");
+                //};
 
             }
             catch (InternalServerErrorException iee)
@@ -83,68 +84,68 @@ namespace bookshelf_aws_app
         }
 
 
+        // Method to check the table status
+        public async Task WaitForTableToBeActive(string tableName)
+        {
+            bool isTableActive = false;
+
+            while (!isTableActive)
+            {
+                var response = await client.DescribeTableAsync(new DescribeTableRequest
+                {
+                    TableName = tableName
+                });
+
+                if (response.Table.TableStatus == TableStatus.ACTIVE)
+                {
+                    isTableActive = true;
+                }
+                else
+                {
+                    // Wait for a short period before checking again
+                    await Task.Delay(300);
+                }
+            }
+        }
+
         // Create a new user
         public async Task CreateUser(string id,string username, string password) 
         {
-            User user = new User
-            {
-                Id = id,
-                UserName = username,
-                Password = password
-            };
-
-            var updateItemRequest = new UpdateItemRequest
-            {
-                TableName = "User", // Name of your DynamoDB table
-                Key = new Dictionary<string, AttributeValue>
-        {
-            { "Id", new AttributeValue { S = id } } // Primary key attribute
-        },
-                UpdateExpression = "SET UserName = :username, Password = :password",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-        {
-            { ":username", new AttributeValue { S = username } },
-            { ":password", new AttributeValue { S = password } }
-        }
-            };
 
             try
             {
-                await client.UpdateItemAsync(updateItemRequest);
-                MessageBox.Show("UserName and Password created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                User user = new User
+                {
+                    Id = id,
+                    UserName = username,
+                    Password = password
+                };
+
+                // Save the user object to the 'User' table
+                await context.SaveAsync(user);
+
+                //// check if the user is on the table
+                User createdUser = await context.LoadAsync<User>(id);
+
+                //// Show a message box if the user is created successfully
+                //if (createdUser != null)
+                //{
+                //    MessageBox.Show("User created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                //}
+
+                //// Show a message box if the user creation failed
+                //else
+                //{
+                //    MessageBox.Show("User creation failed", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //    return;
+                //}
+
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"Failed to create: {ex.Message}");
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("User creation failed" + e.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            //// Create a new user object
-            //User user = new User
-            //{
-            //    Id = id,
-            //    UserName = username,
-            //    Password = password
-            //};
-
-            //// Save the user object to the 'User' table
-            //await context.SaveAsync(user);
-
-            //// check if the user is on the table
-            //User createdUser = await context.LoadAsync<User>(id);
-
-            //// Show a message box if the user is created successfully
-            //if (createdUser != null)
-            //{
-            //    MessageBox.Show("User created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            //}
-
-            //// Show a message box if the user creation failed
-            //else
-            //{
-            //    MessageBox.Show("User creation failed", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return;
-            //}
         }
 
         // Retrieve user by username
@@ -196,7 +197,7 @@ namespace bookshelf_aws_app
 
         public async Task CreateBookTable() 
         {          
-            string tableName = "Book";
+            string tableName = "Bookshelf";
 
             // Check if the table already exists
             var tables = await client.ListTablesAsync();
