@@ -275,27 +275,33 @@ namespace bookshelf_aws_app
         // Create a book
         public async Task InsertBooks()
         {
-            // cria list books
+            // create a book list
             List<Book> books = CreateBooksList();
 
-            // cria lista de users da User table
+            // Get all users from user table
             List<User> users = await GetAllUsersAsync();
 
-            // para cada user na user table,
-            // adiciona o user com um livro da booklist
             try 
             {
-
                 foreach (var user in users)
                 {
                     var bookshelf = new Bookshelf
                     {
+                        // Assign the user's Id
                         UserId = user.Id,
-                        Books = new List<Book> { books[users.IndexOf(user)] }
+                        // Assign two books to each user's bookshelf
+                        Books = new List<Book> 
+                        {
+                            // First book (calc based on the user index)
+                            books[users.IndexOf(user) * 2], 
+                            // Second book 
+                            books[(users.IndexOf(user) * 2) + 1] 
+                        }
                     };
-
+                    // save the bookshelf object to the 'Bookshelf' table
                     await context.SaveAsync(bookshelf);
                 }
+                MessageBox.Show("Bookshelf insertion successful", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception e)
             {
