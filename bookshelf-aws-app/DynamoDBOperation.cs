@@ -25,15 +25,14 @@ namespace bookshelf_aws_app
             context = new DynamoDBContext(client);
         }
 
-        public async Task CreateUserTable()
+        // Method to create a user table
+        public async Task CreateUserTableAsync()
         {
             string tableName = "User";
 
-            // Check if the table already exists
-            var tables = await client.ListTablesAsync();
-            if (tables.TableNames.Contains(tableName))
+            if (await DoesTableExistAsync(tableName))
             {
-                return; // Exit if the table already exists
+                return;
             }
 
             CreateTableRequest request = new CreateTableRequest
@@ -67,10 +66,10 @@ namespace bookshelf_aws_app
             {
                 var response = await client.CreateTableAsync(request);
 
-                //if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                //{
-                //    MessageBox.Show("Table created successfully");
-                //};
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Table created successfully");
+                };
 
             }
             catch (InternalServerErrorException iee)
@@ -83,9 +82,8 @@ namespace bookshelf_aws_app
             }
         }
 
-
         // Method to check the table status
-        public async Task WaitForTableToBeActive(string tableName)
+        public async Task WaitForTableToBeActiveAsync(string tableName)
         {
             bool isTableActive = false;
 
@@ -109,9 +107,8 @@ namespace bookshelf_aws_app
         }
 
         // Create a new user
-        public async Task CreateUser(string id,string username, string password) 
+        public async Task CreateUserAsync(string id,string username, string password) 
         {
-
             try
             {
                 User user = new User
@@ -127,11 +124,11 @@ namespace bookshelf_aws_app
                 //// check if the user is on the table
                 User createdUser = await context.LoadAsync<User>(id);
 
-                //// Show a message box if the user is created successfully
-                //if (createdUser != null)
-                //{
-                //    MessageBox.Show("User created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                //}
+                // Show a message box if the user is created successfully
+                if (createdUser != null)
+                {
+                    MessageBox.Show($"User {username} created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
                 //// Show a message box if the user creation failed
                 //else
@@ -149,7 +146,7 @@ namespace bookshelf_aws_app
         }
 
         // Retrieve user by username
-        public async Task<User> RetrieveUser(string username)
+        public async Task<User> GetUserByUsername(string username)
         {
             // Create the condition to find the user by username in the 'User' table
             var conditions = new List<ScanCondition>
@@ -173,7 +170,8 @@ namespace bookshelf_aws_app
             return null;  
         }
 
-        public async Task UpdateUser(string id, string username, string password)
+        // Update user by id
+        public async Task UpdateUserAsync(string id, string username, string password)
         {
             User user = await context.LoadAsync<User>(id);
             user.UserName = username;
@@ -182,7 +180,8 @@ namespace bookshelf_aws_app
             await context.SaveAsync(user);
         }
 
-        public async Task DeleteUserById(string id)
+        // Delete user by id
+        public async Task DeleteUserByIdAsync(string id)
         {
             await context.DeleteAsync<User>(id);
 
@@ -194,23 +193,30 @@ namespace bookshelf_aws_app
             if (deletedUser == null)
                 Console.WriteLine("User has been deleted");
         }
-
-        public async Task CreateBookTable() 
+        
+        // Create a bookshelf table
+        public async Task CreateBookshelfTableAsync() 
         {          
             string tableName = "Bookshelf";
 
-            // Check if the table already exists
-            var tables = await client.ListTablesAsync();
-            if (tables.TableNames.Contains(tableName))
+            // if table already exists, return
+            if (await DoesTableExistAsync(tableName))
             {
-                return; // Exit if the table already exists
+                return;
             }
 
             CreateTableRequest request = new CreateTableRequest
             {
                 TableName = tableName,
                 AttributeDefinitions = new List<AttributeDefinition>
-                {
+                {   
+                    // Partition key
+                    new AttributeDefinition
+                    {
+                        AttributeName="UserId",
+                        AttributeType="S"
+                    },
+                    // Sort key
                     new AttributeDefinition
                     {
                         AttributeName="ISBN",
@@ -223,6 +229,11 @@ namespace bookshelf_aws_app
                     {
                         AttributeName="ISBN",
                         KeyType="HASH"
+                    },
+                    new KeySchemaElement
+                    {
+                        AttributeName="UserId",
+                        KeyType="RANGE"
                     }
                 },
                 BillingMode = BillingMode.PROVISIONED,
@@ -252,18 +263,87 @@ namespace bookshelf_aws_app
             }
         }
 
-        public async Task CreateBook(string isbn, string title, List<string> authors)
+        // Create a book
+        public async Task InsertBooks(string tableName)
         {
-            //ProductCatalog table
-            Book myBook = new Book
-            {
-                ISBN = "999-000001",
-                Title = "AWS Certified Developer Guide: architecture  ",
-                BookAuthors = new List<string> { "Tong Kim", "Cindy Smith" },
-                CoverPage = "The cover page"
-            };
+            // cria list books
+            List<Book> books = CreateBooksList();
 
-            await context.SaveAsync(myBook);
+            // cria lista de users da User table
+            
+
+            // para cada user na user table,
+            // adiciona o user com um livro da booklist
+
+            foreach (var book in books)
+            {
+                await context.SaveAsync(book);
+            }
+        }
+
+        // Check if a table exists
+        public async Task<bool> DoesTableExistAsync(string tableName) 
+        {
+            // list tables
+            var tables = await client.ListTablesAsync();
+            // true if the table is on the list
+            return tables.TableNames.Contains(tableName);
+        }
+
+        // Create a list of random bookList
+        public static List<Book> CreateBooksList() 
+        {
+            List<Book> bookList = new List<Book>();
+
+            bookList.Add(new Book
+            {
+                ISBN = "978-3-16-148410-0",
+                Title = "The Art of Coding",
+                BookAuthors = new List<string> { "John Smith", "Emily White" },
+                CoverPage = "https://example.com/covers/the-art-of-coding.jpg"
+            });
+
+            bookList.Add(new Book
+            {
+                ISBN = "978-0-14-312854-0",
+                Title = "Data Structures Unleashed",
+                BookAuthors = new List<string> { "Alice Johnson" },
+                CoverPage = "https://example.com/covers/data-structures-unleashed.jpg"
+            });
+
+            //bookList.Add(new Book
+            //{
+            //    ISBN = "978-1-25-012334-7",
+            //    Title = "Mastering Algorithms",
+            //    BookAuthors = new List<string> { "David Lee", "Sophia Brown" },
+            //    CoverPage = "https://example.com/covers/mastering-algorithms.jpg"
+            //});
+
+            //bookList.Add(new Book
+            //{
+            //    ISBN = "978-0-19-953556-9",
+            //    Title = "Design Patterns in C#",
+            //    BookAuthors = new List<string> { "Michael Green" },
+            //    CoverPage = "https://example.com/covers/design-patterns-in-csharp.jpg"
+            //});
+
+            //bookList.Add(new Book
+            //{
+            //    ISBN = "978-1-61-729585-1",
+            //    Title = "Building Scalable Systems",
+            //    BookAuthors = new List<string> { "Linda Martinez" },
+            //    CoverPage = "https://example.com/covers/building-scalable-systems.jpg"
+            //});
+
+            //bookList.Add(new Book
+            //{
+            //    ISBN = "978-0-321-87758-1",
+            //    Title = "Introduction to Cloud Computing",
+            //    BookAuthors = new List<string> { "Robert James", "Jessica Park" },
+            //    CoverPage = "https://example.com/covers/introduction-to-cloud-computing.jpg"
+            //});
+
+            return bookList;
         }
     }
 }

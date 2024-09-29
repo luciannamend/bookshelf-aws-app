@@ -28,15 +28,12 @@ namespace bookshelf_aws_app
 
         private async void InitializeDynamoDB()
         {
-            await dynamoDBOperation.CreateBookTable();
+            await dynamoDBOperation.CreateBookshelfTableAsync();
 
+            await dynamoDBOperation.WaitForTableToBeActiveAsync("Bookshelf");
+
+            await dynamoDBOperation.InsertBooks();
         }
-
-        private async void AddBook() 
-        {
-        }
-
-
 
     }
 }

@@ -20,22 +20,22 @@ namespace bookshelf_aws_app
         public MainWindow()
         {
             InitializeComponent();
-            InitializeDynamoDB();
+            InitializeDynamoDBAsync();
         }
 
         // Create the User table programatically
-        private async void InitializeDynamoDB()
+        private async void InitializeDynamoDBAsync()
         {            
             try 
             {
                 // create user table
-                await dynamoDBOperation.CreateUserTable();
+                await dynamoDBOperation.CreateUserTableAsync();
 
                 // check if it is created
-                await dynamoDBOperation.WaitForTableToBeActive("User");
+                await dynamoDBOperation.WaitForTableToBeActiveAsync("User");
 
                 // if ready, create three users
-                CreateThreeUsers();
+                CreateThreeUsersAsync();
             }
             catch (Exception ex)
             {
@@ -43,23 +43,7 @@ namespace bookshelf_aws_app
             }
         }
 
-        private async void CreateThreeUsers() 
-        {
-            List<User> users = new List<User>();
-
-            users.Add(new User { Id = "1", UserName = "user1", Password = "password1" });
-            users.Add(new User { Id = "2", UserName = "user2", Password = "password2" });
-            users.Add(new User { Id = "3", UserName = "user3", Password = "password3" });
-
-            foreach (User user in users)
-            {
-                await dynamoDBOperation.CreateUser(user.Id, user.UserName, user.Password);
-            }
-
-            MessageBox.Show("Three users created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        // Create login button click event
+        // Create login button
         private async void CreateLoginButton_Click(object sender, RoutedEventArgs e)
         {
             String username = UserNameText.Text;
@@ -72,18 +56,19 @@ namespace bookshelf_aws_app
                 return;
             }
 
-            //  TODO:
-            //  CHECK IF THE USERNAME ALREADY EXISTS
-            //  IF YES, SHOW MESSAGE 
-            //  ELSE CREATE THE USER
+            // Check if the user exists in the database
+            User retreivedUser = await dynamoDBOperation.GetUserByUsername(username);
+            
+            if (retreivedUser != null)
+            {
+                MessageBox.Show("User already exist", "Existent user", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
-
-            await dynamoDBOperation.CreateUser(id, username, password);          
-
-            MessageBox.Show("UserName and Password created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            await dynamoDBOperation.CreateUserAsync(id, username, password); 
         }
 
-        // Login button click event
+        // Login button
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             // Validate the user credentials
@@ -91,7 +76,7 @@ namespace bookshelf_aws_app
             string password = UserPasswordText.Text;
 
             // Check if the user credentials are valid
-            bool isUserValid = await ValidateUserCredentials(username, password);
+            bool isUserValid = await IsUserValidAsync(username, password);
 
             // If invalid, return
             if (isUserValid == false)
@@ -106,9 +91,9 @@ namespace bookshelf_aws_app
         }
 
         // Method to validate the user credentials
-        private async Task<bool> ValidateUserCredentials(string username, string password)
+        private async Task<bool> IsUserValidAsync(string username, string password)
         {       
-            User retreivedUser = await dynamoDBOperation.RetrieveUser(username);
+            User retreivedUser = await dynamoDBOperation.GetUserByUsername(username);
             // Check if the user exists in the database
             if (retreivedUser != null)
             {
@@ -124,6 +109,19 @@ namespace bookshelf_aws_app
             return false;
         }
 
-        
+        // Create three users programatically 
+        private async void CreateThreeUsersAsync()
+        {
+            List<User> users = new List<User>();
+
+            users.Add(new User { Id = "1", UserName = "user1", Password = "password1" });
+            users.Add(new User { Id = "2", UserName = "user2", Password = "password2" });
+            users.Add(new User { Id = "3", UserName = "user3", Password = "password3" });
+
+            foreach (User user in users)
+            {
+                await dynamoDBOperation.CreateUserAsync(user.Id, user.UserName, user.Password);
+            }
+        }
     }
 }
