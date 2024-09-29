@@ -282,14 +282,17 @@ namespace bookshelf_aws_app
             List<Book> books = CreateBooksList();
 
             // cria lista de users da User table
-            
+            List<User> users = await GetAllUsersAsync();
 
             // para cada user na user table,
             // adiciona o user com um livro da booklist
-
-            foreach (var book in books)
+            foreach (var user in users)
             {
-                await context.SaveAsync(book);
+                foreach (var book in books)
+                {
+                    book.UserId = user.Id;
+                    await context.SaveAsync(book);
+                }
             }
         }
 
@@ -309,6 +312,7 @@ namespace bookshelf_aws_app
 
             bookList.Add(new Book
             {
+                UserId = "1",
                 ISBN = "978-3-16-148410-0",
                 Title = "The Art of Coding",
                 BookAuthors = new List<string> { "John Smith", "Emily White" },
@@ -317,44 +321,48 @@ namespace bookshelf_aws_app
 
             bookList.Add(new Book
             {
+                UserId = "1",
                 ISBN = "978-0-14-312854-0",
                 Title = "Data Structures Unleashed",
                 BookAuthors = new List<string> { "Alice Johnson" },
                 CoverPage = "https://example.com/covers/data-structures-unleashed.jpg"
             });
 
-            //bookList.Add(new Book
-            //{
-            //    ISBN = "978-1-25-012334-7",
-            //    Title = "Mastering Algorithms",
-            //    BookAuthors = new List<string> { "David Lee", "Sophia Brown" },
-            //    CoverPage = "https://example.com/covers/mastering-algorithms.jpg"
-            //});
+            bookList.Add(new Book
+            {
+                UserId = "2",
+                ISBN = "978-1-25-012334-7",
+                Title = "Mastering Algorithms",
+                BookAuthors = new List<string> { "David Lee", "Sophia Brown" },
+                CoverPage = "https://example.com/covers/mastering-algorithms.jpg"
+            });
 
-            //bookList.Add(new Book
-            //{
-            //    ISBN = "978-0-19-953556-9",
-            //    Title = "Design Patterns in C#",
-            //    BookAuthors = new List<string> { "Michael Green" },
-            //    CoverPage = "https://example.com/covers/design-patterns-in-csharp.jpg"
-            //});
+            bookList.Add(new Book
+            {
+                UserId = "2",
+                ISBN = "978-0-19-953556-9",
+                Title = "Design Patterns in C#",
+                BookAuthors = new List<string> { "Michael Green" },
+                CoverPage = "https://example.com/covers/design-patterns-in-csharp.jpg"
+            });
 
-            //bookList.Add(new Book
-            //{
-            //    ISBN = "978-1-61-729585-1",
-            //    Title = "Building Scalable Systems",
-            //    BookAuthors = new List<string> { "Linda Martinez" },
-            //    CoverPage = "https://example.com/covers/building-scalable-systems.jpg"
-            //});
+            bookList.Add(new Book
+            {
+                UserId = "3",
+                ISBN = "978-1-61-729585-1",
+                Title = "Building Scalable Systems",
+                BookAuthors = new List<string> { "Linda Martinez" },
+                CoverPage = "https://example.com/covers/building-scalable-systems.jpg"
+            });
 
-            //bookList.Add(new Book
-            //{
-            //    ISBN = "978-0-321-87758-1",
-            //    Title = "Introduction to Cloud Computing",
-            //    BookAuthors = new List<string> { "Robert James", "Jessica Park" },
-            //    CoverPage = "https://example.com/covers/introduction-to-cloud-computing.jpg"
-            //});
-
+            bookList.Add(new Book
+            {
+                UserId = "3",
+                ISBN = "978-0-321-87758-1",
+                Title = "Introduction to Cloud Computing",
+                BookAuthors = new List<string> { "Robert James", "Jessica Park" },
+                CoverPage = "https://example.com/covers/introduction-to-cloud-computing.jpg"
+            });
             return bookList;
         }
     }
