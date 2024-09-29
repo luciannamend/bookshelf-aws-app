@@ -170,6 +170,18 @@ namespace bookshelf_aws_app
             return null;  
         }
 
+        // Get all users
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            // Scan the 'User' table to get all users
+            var search = context.ScanAsync<User>(new List<ScanCondition>());
+
+            // Get the result of the scan
+            var result = await search.GetNextSetAsync();
+
+            // Return the list of users
+            return result;
+        }
         // Update user by id
         public async Task UpdateUserAsync(string id, string username, string password)
         {
