@@ -118,6 +118,14 @@ namespace bookshelf_aws_app
                     Password = password
                 };
 
+                // check if the user is on the table
+                User existingUser = await context.LoadAsync<User>(id);
+                if (existingUser != null)
+                {
+                    MessageBox.Show("User already exists", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 // Save the user object to the 'User' table
                 await context.SaveAsync(user);
 
