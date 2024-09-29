@@ -227,25 +227,14 @@ namespace bookshelf_aws_app
                     {
                         AttributeName="UserId",
                         AttributeType="S"
-                    },
-                    // Sort key
-                    new AttributeDefinition
-                    {
-                        AttributeName="ISBN",
-                        AttributeType="S"
                     }
                 },
                 KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement
-                    {
-                        AttributeName="ISBN",
-                        KeyType="HASH"
-                    },
+                {                
                     new KeySchemaElement
                     {
                         AttributeName="UserId",
-                        KeyType="RANGE"
+                        KeyType="HASH"
                     }
                 },
                 BillingMode = BillingMode.PROVISIONED,
@@ -276,7 +265,7 @@ namespace bookshelf_aws_app
         }
 
         // Create a book
-        public async Task InsertBooks(string tableName)
+        public async Task InsertBooks()
         {
             // cria list books
             List<Book> books = CreateBooksList();
@@ -286,13 +275,23 @@ namespace bookshelf_aws_app
 
             // para cada user na user table,
             // adiciona o user com um livro da booklist
-            foreach (var user in users)
+            try 
             {
-                foreach (var book in books)
+
+                foreach (var user in users)
                 {
-                    book.UserId = user.Id;
-                    await context.SaveAsync(book);
+                    var bookshelf = new Bookshelf
+                    {
+                        UserId = user.Id,
+                        Books = new List<Book> { books[users.IndexOf(user)] }
+                    };
+
+                    await context.SaveAsync(bookshelf);
                 }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Bookshelf insertion failed" + e.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -312,55 +311,49 @@ namespace bookshelf_aws_app
 
             bookList.Add(new Book
             {
-                UserId = "1",
                 ISBN = "978-3-16-148410-0",
                 Title = "The Art of Coding",
-                BookAuthors = new List<string> { "John Smith", "Emily White" },
+                Authors = new List<string> { "John Smith", "Emily White" },
                 CoverPage = "https://example.com/covers/the-art-of-coding.jpg"
             });
 
             bookList.Add(new Book
             {
-                UserId = "1",
                 ISBN = "978-0-14-312854-0",
                 Title = "Data Structures Unleashed",
-                BookAuthors = new List<string> { "Alice Johnson" },
+                Authors = new List<string> { "Alice Johnson" },
                 CoverPage = "https://example.com/covers/data-structures-unleashed.jpg"
             });
 
             bookList.Add(new Book
             {
-                UserId = "2",
                 ISBN = "978-1-25-012334-7",
                 Title = "Mastering Algorithms",
-                BookAuthors = new List<string> { "David Lee", "Sophia Brown" },
+                Authors = new List<string> { "David Lee", "Sophia Brown" },
                 CoverPage = "https://example.com/covers/mastering-algorithms.jpg"
             });
 
             bookList.Add(new Book
             {
-                UserId = "2",
                 ISBN = "978-0-19-953556-9",
                 Title = "Design Patterns in C#",
-                BookAuthors = new List<string> { "Michael Green" },
+                Authors = new List<string> { "Michael Green" },
                 CoverPage = "https://example.com/covers/design-patterns-in-csharp.jpg"
             });
 
             bookList.Add(new Book
             {
-                UserId = "3",
                 ISBN = "978-1-61-729585-1",
                 Title = "Building Scalable Systems",
-                BookAuthors = new List<string> { "Linda Martinez" },
+                Authors = new List<string> { "Linda Martinez" },
                 CoverPage = "https://example.com/covers/building-scalable-systems.jpg"
             });
 
             bookList.Add(new Book
             {
-                UserId = "3",
                 ISBN = "978-0-321-87758-1",
                 Title = "Introduction to Cloud Computing",
-                BookAuthors = new List<string> { "Robert James", "Jessica Park" },
+                Authors = new List<string> { "Robert James", "Jessica Park" },
                 CoverPage = "https://example.com/covers/introduction-to-cloud-computing.jpg"
             });
             return bookList;

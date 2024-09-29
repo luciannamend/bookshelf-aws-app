@@ -8,21 +8,22 @@ using System.Threading.Tasks;
 namespace bookshelf_aws_app
 {
     [DynamoDBTable("Bookshelf")]
-    internal class Book
+    internal class Bookshelf
     {
+        // Partition key
         [DynamoDBHashKey]
         public string UserId { get; set; }
 
-        [DynamoDBHashKey]
+        // Sort key
+        [DynamoDBProperty("Books")]
+        public List<Book> Books { get; set; }
+    }
+
+    class Book
+    {
         public string ISBN { get; set; }
-
-        [DynamoDBProperty("Title")]
         public string Title { get; set; }
-
-        [DynamoDBProperty("Authors")]
-        public List<string> BookAuthors { get; set; }
-
-        [DynamoDBIgnore]
+        public List<string> Authors { get; set; }
         public string CoverPage { get; set; }
     }
 }
