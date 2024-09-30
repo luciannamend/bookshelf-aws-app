@@ -22,20 +22,36 @@ namespace bookshelf_aws_app
 
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
+
+        public string Username { get; }
 
         public BookshelfWindow()
         {
+            
+        }
+
+        public BookshelfWindow(string username)
+        {
+            Username = username;
+
             InitializeComponent();
             InitializeDynamoDB();
         }
 
         private async void InitializeDynamoDB()
         {
+            string tableName = "Bookshelf";
+
             await dynamoDBBookselfOperation.CreateBookshelfTableAsync();
 
-            await dynamoDBOperation.WaitForTableToBeActiveAsync("Bookshelf");
+            await dynamoDBOperation.WaitForTableToBeActiveAsync(tableName);
 
             await dynamoDBBookselfOperation.InsertBooks();
+
+            await dynamoDBBookselfOperation.WaitForObjectInsertion(tableName);
+
+            await PopulateDataGrid(Username);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -43,6 +59,17 @@ namespace bookshelf_aws_app
             ViewPDFWindow viewPDFWindow = new ViewPDFWindow();
             viewPDFWindow.Show();
             this.Close();
+        }
+
+        private async Task PopulateDataGrid(string username)
+        {
+            User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
+
+            string userId = retreivedUser.Id;
+
+            List<Book> bookList = await dynamoDBBookselfOperation.GetBooksByUser(userId);
+
+            BookshelfDataGrid.ItemsSource = bookList;
         }
     }
 }

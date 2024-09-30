@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:bookshelf_aws_app"
         mc:Ignorable="d"
-        Title="BookshelfWindow" Height="450" Width="800">
+        Title="eBook Reader" Height="450" Width="800">
     <Grid>
-        <Button x:Name="ViewPDFWindowBtn" Content="View PDF" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Button_Click" Margin="20,20,0,0"/>
+        <DataGrid x:Name="BookshelfDataGrid" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="300" Margin="10,10,0,0" VerticalAlignment="Top" Width="600"/>
+        <Button x:Name="ViewPDFWindowBtn" Content="View PDF" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Button_Click" Margin="700,80,0,0"/>
     </Grid>
 </Window>

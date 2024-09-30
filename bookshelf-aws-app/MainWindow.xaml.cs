@@ -87,7 +87,7 @@ namespace bookshelf_aws_app
             }
 
             // If valid, open the BookListWindow
-            BookshelfWindow bookshelfWindow = new BookshelfWindow();
+            BookshelfWindow bookshelfWindow = new BookshelfWindow(username);
             bookshelfWindow.Show();
             this.Close();
         }
