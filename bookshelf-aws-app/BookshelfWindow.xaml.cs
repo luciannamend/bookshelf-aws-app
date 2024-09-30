@@ -15,14 +15,14 @@ using System.Windows.Shapes;
 namespace bookshelf_aws_app
 {
     /// <summary>
-    /// Interaction logic for BookListWindow.xaml
+    /// Interaction logic for BookshelfWindow.xaml
     /// </summary>
-    public partial class BookListWindow : Window
+    public partial class BookshelfWindow : Window
     {
+
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
-
-        public BookListWindow()
+        public BookshelfWindow()
         {
             InitializeComponent();
             InitializeDynamoDB();
@@ -36,6 +36,5 @@ namespace bookshelf_aws_app
 
             await dynamoDBBookselfOperation.InsertBooks();
         }
-
     }
 }
