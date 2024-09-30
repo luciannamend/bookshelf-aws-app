@@ -128,50 +128,44 @@ namespace bookshelf_aws_app
 
             bookList.Add(new Book
             {
-                ISBN = "978-3-16-148410-0",
-                Title = "The Art of Coding",
-                Authors = new List<string> { "John Smith", "Emily White" },
-                CoverPage = "https://example.com/covers/the-art-of-coding.jpg"
+                ISBN = "9780451531384",
+                Title = "A Room With a View",
+                Authors = new List<string> { "E. M. Forster"}
             });
 
             bookList.Add(new Book
             {
-                ISBN = "978-0-14-312854-0",
-                Title = "Data Structures Unleashed",
-                Authors = new List<string> { "Alice Johnson" },
-                CoverPage = "https://example.com/covers/data-structures-unleashed.jpg"
+                ISBN = "0486282112",
+                Title = "Frankenstein; Or, The Modern Prometheus",
+                Authors = new List<string> { "Mary Wollstonecraft Shelley" }
             });
 
             bookList.Add(new Book
             {
-                ISBN = "978-1-25-012334-7",
-                Title = "Mastering Algorithms",
-                Authors = new List<string> { "David Lee", "Sophia Brown" },
-                CoverPage = "https://example.com/covers/mastering-algorithms.jpg"
+                ISBN = "0743273567",
+                Title = "The Great Gatsby",
+                Authors = new List<string> { "F. Scott Fitzgerald" }
             });
 
             bookList.Add(new Book
             {
-                ISBN = "978-0-19-953556-9",
-                Title = "Design Patterns in C#",
-                Authors = new List<string> { "Michael Green" },
-                CoverPage = "https://example.com/covers/design-patterns-in-csharp.jpg"
+                ISBN = "1503287274",
+                Title = "Narrative of the Life of Frederick Douglass, an American Slave",
+                Authors = new List<string> { "Frederick Douglass" }
             });
 
             bookList.Add(new Book
             {
-                ISBN = "978-1-61-729585-1",
-                Title = "Building Scalable Systems",
-                Authors = new List<string> { "Linda Martinez" },
-                CoverPage = "https://example.com/covers/building-scalable-systems.jpg"
+                ISBN = "1503222683",
+                Title = "Alice's Adventures in Wonderland",
+                Authors = new List<string> { "Lewis Carroll" }
             });
 
             bookList.Add(new Book
             {
-                ISBN = "978-0-321-87758-1",
-                Title = "Introduction to Cloud Computing",
-                Authors = new List<string> { "Robert James", "Jessica Park" },
-                CoverPage = "https://example.com/covers/introduction-to-cloud-computing.jpg"
+                ISBN = "0486266885",
+                Title = "The Strange Case of Dr. Jekyll and Mr. Hyde",
+                Authors = new List<string> { "Robert Louis Stevenson" }
             });
             return bookList;
         }

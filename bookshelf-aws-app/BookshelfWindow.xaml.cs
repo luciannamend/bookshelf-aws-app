@@ -22,6 +22,7 @@ namespace bookshelf_aws_app
 
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+
         public BookshelfWindow()
         {
             InitializeComponent();
@@ -35,6 +36,13 @@ namespace bookshelf_aws_app
             await dynamoDBOperation.WaitForTableToBeActiveAsync("Bookshelf");
 
             await dynamoDBBookselfOperation.InsertBooks();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ViewPDFWindow viewPDFWindow = new ViewPDFWindow();
+            viewPDFWindow.Show();
+            this.Close();
         }
     }
 }

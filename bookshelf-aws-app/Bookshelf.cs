@@ -23,6 +23,5 @@ namespace bookshelf_aws_app
         public string ISBN { get; set; }
         public string Title { get; set; }
         public List<string> Authors { get; set; }
-        public string CoverPage { get; set; }
     }
 }
