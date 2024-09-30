@@ -26,10 +26,7 @@ namespace bookshelf_aws_app
 
         public string Username { get; }
 
-        public BookshelfWindow()
-        {
-            
-        }
+        public BookshelfWindow() {}
 
         public BookshelfWindow(string username)
         {
@@ -49,26 +46,35 @@ namespace bookshelf_aws_app
 
             await dynamoDBBookselfOperation.InsertBooks();
 
-            await dynamoDBBookselfOperation.WaitForObjectInsertion(tableName);
-
             await PopulateDataGrid(Username);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ViewPDFWindow viewPDFWindow = new ViewPDFWindow();
+            Book selectedBook = (Book)BookshelfDataGrid.SelectedItem;
+
+            if (selectedBook == null)
+            {
+                MessageBox.Show("Please select a book to read");
+                return;
+            }
+
+            MessageBox.Show("Opening book: \n" + selectedBook.Title);
+
+            ViewPDFWindow viewPDFWindow = new ViewPDFWindow(selectedBook.Title);
             viewPDFWindow.Show();
             this.Close();
         }
 
         private async Task PopulateDataGrid(string username)
         {
+            // get the user
             User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
-
+            // and its id
             string userId = retreivedUser.Id;
-
+            // get the list of books by user id
             List<Book> bookList = await dynamoDBBookselfOperation.GetBooksByUser(userId);
-
+            // display on data grid
             BookshelfDataGrid.ItemsSource = bookList;
         }
     }

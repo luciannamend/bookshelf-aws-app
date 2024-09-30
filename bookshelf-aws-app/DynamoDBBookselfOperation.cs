@@ -188,27 +188,5 @@ namespace bookshelf_aws_app
             return bookList;
 
         }
-
-        public async Task WaitForObjectInsertion(string tableName) 
-        {
-            bool isObjectInserted = false;
-
-            while (!isObjectInserted)
-            {
-                var response = await client.DescribeTableAsync(new DescribeTableRequest
-                {
-                    TableName = tableName
-                });
-
-                if (response.Table.TableStatus == TableStatus.ACTIVE)
-                {
-                    isObjectInserted = true;
-                }
-                else
-                {
-                    await Task.Delay(1000);
-                }
-            }
-        }
     }
 }

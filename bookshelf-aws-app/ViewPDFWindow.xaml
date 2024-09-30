@@ -8,6 +8,6 @@
         mc:Ignorable="d"
         Title="ViewPDFWindow" Height="450" Width="800">
     <Grid>
-        <PdfViewer:PdfViewerControl x:Name="PDFViewer" ItemSource="Binding DocumentStream" VerticalAlignment="Center"/>
+        <PdfViewer:PdfViewerControl x:Name="PDFViewer" ItemSource="{Binding DocumentStream}" VerticalAlignment="Center"/>
     </Grid>
 </Window>
