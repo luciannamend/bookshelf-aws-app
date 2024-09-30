@@ -14,7 +14,6 @@ namespace bookshelf_aws_app
         [DynamoDBHashKey]
         public string UserId { get; set; }
 
-        // Sort key
         [DynamoDBProperty("Books")]
         public List<Book> Books { get; set; }
     }

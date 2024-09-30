@@ -20,6 +20,8 @@ namespace bookshelf_aws_app
     public partial class BookListWindow : Window
     {
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
+        DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+
         public BookListWindow()
         {
             InitializeComponent();
@@ -28,11 +30,11 @@ namespace bookshelf_aws_app
 
         private async void InitializeDynamoDB()
         {
-            await dynamoDBOperation.CreateBookshelfTableAsync();
+            await dynamoDBBookselfOperation.CreateBookshelfTableAsync();
 
             await dynamoDBOperation.WaitForTableToBeActiveAsync("Bookshelf");
 
-            await dynamoDBOperation.InsertBooks();
+            await dynamoDBBookselfOperation.InsertBooks();
         }
 
     }
