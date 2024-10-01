@@ -49,7 +49,7 @@ namespace bookshelf_aws_app
             await PopulateDataGrid(Username);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void BooksDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e)
         {
             Book selectedBook = (Book)BookshelfDataGrid.SelectedItem;
 
