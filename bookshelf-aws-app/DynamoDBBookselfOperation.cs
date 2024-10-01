@@ -84,7 +84,7 @@ namespace bookshelf_aws_app
             }
         }
 
-        // Create a book
+        // Insert books
         public async Task InsertBooks()
         {
             // create a book list
@@ -97,22 +97,47 @@ namespace bookshelf_aws_app
             {
                 foreach (var user in users)
                 {
-                    var bookshelf = new Bookshelf
+                    var existingBookshelf = await context.LoadAsync<Bookshelf>(user.Id);
+                    HashSet<string> existingBookTitles = new HashSet<string>();
+
+                    if (existingBookshelf != null)
                     {
-                        // Assign the user's Id
-                        UserId = user.Id,
-                        // Assign two books to each user's bookshelf
-                        Books = new List<Book>
+                        foreach (var existingBook in existingBookshelf.Books)
+                        {
+                            existingBookTitles.Add(existingBook.Title);
+                        }
+                    }
+
+                    List<Book> booksToInsert = new List<Book>();
+
+                    foreach (var book in books) 
+                    {
+                        if (!existingBookTitles.Contains(book.Title))
+                        {
+                            booksToInsert.Add(book);
+                        }
+                    }
+
+                    if (booksToInsert.Count > 0)
+                    {
+                        var bookshelf = new Bookshelf
+                        {
+                            // Assign the user's Id
+                            UserId = user.Id,
+                            // Assign two books to each user's bookshelf
+                            Books = new List<Book>
                         {
                             // First book (calc based on the user index)
                             books[users.IndexOf(user) * 2], 
                             // Second book 
                             books[(users.IndexOf(user) * 2) + 1]
                         }
-                    };
-                    // save the bookshelf object to the 'Bookshelf' table
-                    await context.SaveAsync(bookshelf);
+                        };
+                        // save the bookshelf object to the 'Bookshelf' table
+                        await context.SaveAsync(bookshelf);
+                    }
                 }
+
                 MessageBox.Show("Bookshelf insertion successful", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception e)
