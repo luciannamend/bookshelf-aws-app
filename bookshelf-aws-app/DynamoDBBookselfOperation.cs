@@ -146,6 +146,25 @@ namespace bookshelf_aws_app
             }
         }
 
+        public async void AddLastViewedPageNumber(string userId, int lastViewedPageNumber)
+        {
+            try
+            {
+                var bookshelf = await context.LoadAsync<Bookshelf>(userId);
+
+                if (bookshelf != null)
+                {
+                    bookshelf.Books = bookshelf.Books;
+                    bookshelf.LastViewedPage = lastViewedPageNumber;
+                    await context.SaveAsync(bookshelf);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Error updating bookshelf: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // Create a list of random bookList
         public static List<Book> CreateBooksList()
         {

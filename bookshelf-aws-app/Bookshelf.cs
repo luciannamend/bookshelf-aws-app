@@ -16,6 +16,9 @@ namespace bookshelf_aws_app
 
         [DynamoDBProperty("Books")]
         public List<Book> Books { get; set; }
+
+        [DynamoDBProperty("LastViewedPage")]
+        public int LastViewedPage { get; set; }
     }
 
     class Book

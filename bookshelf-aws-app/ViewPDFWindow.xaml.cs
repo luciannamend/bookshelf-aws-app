@@ -25,20 +25,30 @@ namespace bookshelf_aws_app
     public partial class ViewPDFWindow : Window
     {
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
+        DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
+
         // Property to hold the PDF document stream
         public MemoryStream DocumentStream { get; set; }
+        private int currentPageNumber;
+        public string Username { get; set; }
 
         public ViewPDFWindow()
         {
         }
 
-        public ViewPDFWindow(string title)
+        public ViewPDFWindow(string title, string username)
         {
+            Username = username;
+
             SyncfusionLicenseProvider.RegisterLicense(ConfigurationManager.AppSettings["syncfusionlicense"]);
             Title = title;
             InitializeComponent();
 
             LoadPDF(title);
+
+            PDFViewer.CurrentPageChanged += PDFViewer_CurrentPageChanged;
+
         }
 
 
@@ -69,5 +79,40 @@ namespace bookshelf_aws_app
             }
 
         }
-    } 
+
+        // ||||||||||||||||  SAVING LAST PAGE VIEWED  ||||||||||||||||||  //
+        private void PDFViewer_CurrentPageChanged(object sender, EventArgs e)
+        {
+            currentPageNumber = PDFViewer.CurrentPage; 
+        }
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // Save the current page number to persistent storage before closing
+            SaveLastPage(currentPageNumber);
+            base.OnClosing(e);
+        }
+        private async void SaveLastPage(int pageNumber)
+        {
+            try
+            {
+                User user = await dynamoDBUserOperation.GetUserByUsername(Username);
+                if (user == null) 
+                { 
+                    await Task.Delay(5000); 
+                }   
+                
+                string currentUserId = user.Id;
+
+                MessageBox.Show($"Last page viewed: {pageNumber}, for userid: {user.Id}");
+
+                dynamoDBBookselfOperation.AddLastViewedPageNumber(currentUserId, pageNumber);
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Error saving last page viewed: " + e);
+            }
+                        
+        }
+    }     
 }

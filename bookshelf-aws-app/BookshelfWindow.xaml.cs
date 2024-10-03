@@ -61,7 +61,7 @@ namespace bookshelf_aws_app
 
             MessageBox.Show("Opening book: \n" + selectedBook.Title);
 
-            ViewPDFWindow viewPDFWindow = new ViewPDFWindow(selectedBook.Title);
+            ViewPDFWindow viewPDFWindow = new ViewPDFWindow(selectedBook.Title, Username);
             viewPDFWindow.Show();
             this.Close();
         }
