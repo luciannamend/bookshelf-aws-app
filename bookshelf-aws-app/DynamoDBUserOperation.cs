@@ -2,42 +2,39 @@
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace bookshelf_aws_app
 {
+    /// <summary>
+    /// 
+    /// </summary>
     class DynamoDBUserOperation
     {
-        AmazonDynamoDBClient client;
-        DynamoDBContext context;
-        Amazon.Runtime.BasicAWSCredentials credentials;
-
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
+        private App app;
+        public string tableName = "User";
 
         public DynamoDBUserOperation() 
         {
-            credentials = new Amazon.Runtime.BasicAWSCredentials(ConfigurationManager.AppSettings["accessId"], ConfigurationManager.AppSettings["secretKey"]);
-            client = new AmazonDynamoDBClient(credentials, Amazon.RegionEndpoint.USEast1);
-            context = new DynamoDBContext(client);
+            app = (App)Application.Current;
         }
 
         // Method to create a user table
         public async Task CreateUserTableAsync()
         {
-            string tableName = "User";
+            // access the DynamoDB client and context from the App class
+            var client = app.DynamoDbClient;
+            var context = app.DynamoDbContext;
 
-            if (await dynamoDBOperation.DoesTableExistAsync(tableName))
+            // if table exists, return
+            if (await DoesTableExistAsync(client, tableName))
             {
                 return;
             }
 
+            // Create a new table request
             CreateTableRequest request = new CreateTableRequest
             {
                 TableName = tableName,
@@ -71,28 +68,29 @@ namespace bookshelf_aws_app
 
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    MessageBox.Show("Table created successfully");
+                    Debug.WriteLine("Table created successfully");
                 };
 
             }
             catch (InternalServerErrorException iee)
             {
-                MessageBox.Show("An error occurred on the server side ", iee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine("An error occurred on the server side " + iee);
             }
             catch (LimitExceededException lee)
             {
-                MessageBox.Show("you are creating a table with one or more secondary indexes+ ", lee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine("you are creating a table with one or more secondary indexes+ " + lee);
             }
         }
 
         // Create three users programatically 
         public async Task CreateThreeUsersAsync()
         {
-            List<User> users = new List<User>();
-
-            users.Add(new User { Id = 1, UserName = "user1", Password = "password1" });
-            users.Add(new User { Id = 2, UserName = "user2", Password = "password2" });
-            users.Add(new User { Id = 3, UserName = "user3", Password = "password3" });
+            List<User> users = new List<User>
+            {
+                new User { Id = 1, UserName = "user1", Password = "password1" },
+                new User { Id = 2, UserName = "user2", Password = "password2" },
+                new User { Id = 3, UserName = "user3", Password = "password3" }
+            };
 
             foreach (User user in users)
             {
@@ -103,44 +101,62 @@ namespace bookshelf_aws_app
         // Create a new user
         public async Task CreateUserAsync(int id, string username, string password)
         {
+            // access the DynamoDB context from the App class
+            var context = app.DynamoDbContext;
+
             try
             {
+                // Hash the password for security
+                string hashedPassword = HashPassword(password);
+
                 User user = new User
                 {
                     Id = id,
                     UserName = username,
-                    Password = password
+                    Password = hashedPassword
                 };
 
                 // check if the user is on the table
                 User existingUser = await context.LoadAsync<User>(id);
+
+                // if user exists, return
                 if (existingUser != null)
                 {
-                    MessageBox.Show("User already exists", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Debug.WriteLine("User already exists: " + username);
                     return;
                 }
 
-                // Save the user object to the 'User' table
+                // save the user
                 await context.SaveAsync(user);
-
-                //// check if the user is on the table
-                User createdUser = await context.LoadAsync<User>(id);
-
-                // Show a message box if the user is created successfully
-                if (createdUser != null)
-                {
-                    MessageBox.Show($"User {username} created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                Debug.WriteLine($"User {username} created successfully");
             }
             catch (Exception e)
             {
-                MessageBox.Show("User creation failed" + e.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine("Error creating user: " + e.Message);
             }
+        }
+
+        // encrypt the password
+        private string HashPassword(string password)
+        {
+            // Generate a salt and hash the password
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+
+            // return the hashed password
+            return hashedPassword; 
+        }
+
+        // verify the hashed password
+        public bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
 
         // Retrieve user by username
         public async Task<User> GetUserByUsername(string username)
         {
+            // access the DynamoDB context from the App class
+            var context = app.DynamoDbContext;
             try 
             {
                 // Create the condition to find the user by username in the 'User' table
@@ -152,14 +168,8 @@ namespace bookshelf_aws_app
                 // Scan to find the user by username
                 var search = context.ScanAsync<User>(conditions);
 
-                //MessageBox.Show("Searching for user: " + username);
-
-                Debug.WriteLine("Searching for user: " + username);
-
                 // Get the result of the scan
-                var result = await search.GetNextSetAsync(); // CODE BREAKS HERE
-
-                //MessageBox.Show("Result count: " + result.Count);
+                var result = await search.GetNextSetAsync(); 
 
                 // If the result is not empty, return the first user
                 if (result.Count > 0)
@@ -172,7 +182,7 @@ namespace bookshelf_aws_app
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error : " + e.Message);
+                Debug.WriteLine($"Error to get user {username} : " + e.Message);
                 return null;
             }
         }
@@ -180,7 +190,10 @@ namespace bookshelf_aws_app
         // Get all users
         public async Task<List<User>> GetAllUsersAsync()
         {
-            // Scan the 'User' table to get all users
+            // access the DynamoDB context from the App class
+            var context = app.DynamoDbContext;
+
+            // Scan User table to get all users
             var search = context.ScanAsync<User>(new List<ScanCondition>());
 
             // Get the result of the scan
@@ -188,6 +201,14 @@ namespace bookshelf_aws_app
 
             // Return the list of users
             return result;
+        }
+
+        // PASS THIS () TO THE DB OPERATIONS GENERAL
+        // Helper method to check if the table exists
+        private async Task<bool> DoesTableExistAsync(AmazonDynamoDBClient client, string tableName)
+        {
+            var tables = await client.ListTablesAsync();
+            return tables.TableNames.Contains(tableName);
         }
     }
 }

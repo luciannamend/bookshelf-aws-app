@@ -115,24 +115,25 @@ namespace bookshelf_aws_app
         // Method to validate the user credentials
         private async Task<User> GetValidUser(string username, string password)
         {
-            // get user by username
-            User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
+            // Get user by username
+            User retrievedUser = await dynamoDBUserOperation.GetUserByUsername(username);
 
-            // if user is not null (exists)
-            if (retreivedUser != null)
+            // If user is not null (exists)
+            if (retrievedUser != null)
             {
-                // check if the password is correct
-                if (retreivedUser.Password == password)
+                // Check if the password is correct using hashed verification
+                if (dynamoDBUserOperation.VerifyPassword(password, retrievedUser.Password))
                 {
                     // If the password is correct, return the existing user
-                    return retreivedUser;
+                    return retrievedUser;
                 }
             }
+
             // If the user does not exist or the password is incorrect, show an error message
-            MessageBox.Show("Authentication failed. Please check your username and password.", 
+            MessageBox.Show("Authentication failed. Please check your username and password.",
                 "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            // and return null 
+            // return null if failed
             return null;
         }
     }    

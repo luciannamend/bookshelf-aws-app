@@ -10,7 +10,8 @@ namespace bookshelf_aws_app
     [DynamoDBTable("User")]
     public class User
     {
-        [DynamoDBHashKey("Id")] //Partition key
+        //Partition key
+        [DynamoDBHashKey("Id")]
         public int Id {get; set;}
 
         [DynamoDBProperty("UserName")]
