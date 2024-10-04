@@ -31,7 +31,7 @@ namespace bookshelf_aws_app
         DynamoDBContext context;
         Amazon.Runtime.BasicAWSCredentials credentials;
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
-        DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        DynamoDBBookshelfOperation dynamoDBBookselfOperation = new DynamoDBBookshelfOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         BookshelfWindow BookshelfWindow = new BookshelfWindow();
 

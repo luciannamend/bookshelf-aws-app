@@ -12,7 +12,7 @@ namespace bookshelf_aws_app
     {
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
-        DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        DynamoDBBookshelfOperation dynamoDBBookselfOperation = new DynamoDBBookshelfOperation();
         Random random = new Random();
         private TaskCompletionSource<bool> _usersCreated = new TaskCompletionSource<bool>();
         public string tableName = "User";

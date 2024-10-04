@@ -8,29 +8,29 @@ using System.Threading.Tasks;
 using System.Configuration;
 using Amazon.DynamoDBv2.Model;
 using System.Windows;
+using System.Diagnostics;
 
 namespace bookshelf_aws_app
 {
-    class DynamoDBBookselfOperation
+    class DynamoDBBookshelfOperation
     {
-        AmazonDynamoDBClient client;
-        DynamoDBContext context;
-        Amazon.Runtime.BasicAWSCredentials credentials;
 
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
+        private App app;
+        public string tableName = "Bookshelf";
+        public string userIdAttribute = "UserId";
 
-        public DynamoDBBookselfOperation()
+        public DynamoDBBookshelfOperation()
         {
-            credentials = new Amazon.Runtime.BasicAWSCredentials(ConfigurationManager.AppSettings["accessId"], ConfigurationManager.AppSettings["secretKey"]);
-            client = new AmazonDynamoDBClient(credentials, Amazon.RegionEndpoint.USEast1);
-            context = new DynamoDBContext(client);
+            app = (App)Application.Current;
         }
 
         // Create a bookshelf table
         public async Task CreateBookshelfTableAsync()
         {
-            string tableName = "Bookshelf";
+            // access the DynamoDB client 
+            var client = app.DynamoDbClient;
 
             // if table already exists, return
             if (await dynamoDBOperation.DoesTableExistAsync(tableName))
@@ -38,15 +38,15 @@ namespace bookshelf_aws_app
                 return;
             }
 
+            // if doesn't exist, create
             CreateTableRequest request = new CreateTableRequest
             {
                 TableName = tableName,
                 AttributeDefinitions = new List<AttributeDefinition>
                 {   
-                    // Partition key
                     new AttributeDefinition
                     {
-                        AttributeName="UserId",
+                        AttributeName = userIdAttribute,
                         AttributeType="N"
                     }
                 },
@@ -54,7 +54,7 @@ namespace bookshelf_aws_app
                 {
                     new KeySchemaElement
                     {
-                        AttributeName="UserId",
+                        AttributeName = userIdAttribute,
                         KeyType="HASH"
                     }
                 },
@@ -71,22 +71,25 @@ namespace bookshelf_aws_app
                 var response = await client.CreateTableAsync(request);
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    MessageBox.Show("Table created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Debug.WriteLine("Table created successfully");
                 };
             }
             catch (InternalServerErrorException iee)
             {
-                MessageBox.Show("An error occurred on the server side ", iee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"An error occurred on the server side {iee}");
             }
             catch (LimitExceededException lee)
             {
-                MessageBox.Show("you are creating a table with one or more secondary indexes+ ", lee.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"you are creating a table with one or more secondary indexes+ {lee}");
             }
         }
 
         // Insert books
         public async Task InsertBooks()
         {
+            // access the DynamoDB context
+            var context = app.DynamoDbContext;
+
             // create a book list
             List<Book> books = CreateBooksList();
 
@@ -97,7 +100,10 @@ namespace bookshelf_aws_app
             {
                 foreach (var user in users)
                 {
+                    // load the bookshelf associated with userId
                     var existingBookshelf = await context.LoadAsync<Bookshelf>(user.Id);
+
+                    // create a hashset to store existing book titles
                     HashSet<string> existingBookTitles = new HashSet<string>();
 
                     if (existingBookshelf != null)
@@ -135,16 +141,19 @@ namespace bookshelf_aws_app
                     }
                 }
 
-                MessageBox.Show("Bookshelf insertion successful", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                Debug.WriteLine("Bookshelf insertion successful");
             }
             catch (Exception e)
             {
-                MessageBox.Show("Bookshelf insertion failed" + e.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Bookshelf insertion failed {e}");
             }
         }
 
         public async Task AddLastViewedPageNumber(int userId, string selectedTitle, int lastViewedPageNumber, DateTime closingTime)
         {
+            // Access the DynamoDB context
+            var context = app.DynamoDbContext;
+
             try
             {
                 // Load the bookshelf associated with the given userId
@@ -165,21 +174,21 @@ namespace bookshelf_aws_app
                         // Save the updated bookshelf to DynamoDB
                         await context.SaveAsync(bookshelf);
 
-                        MessageBox.Show("Your book on the Bookshelf was updated successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        Debug.WriteLine("Your book on the Bookshelf was updated successfully");
                     }
                     else
                     {
-                        MessageBox.Show("Book not found in the bookshelf.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Debug.WriteLine("Book not found in the bookshelf.");
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Bookshelf not found for the given user ID.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Debug.WriteLine("Bookshelf not found for the given user ID.");
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error updating bookshelf: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine("Error updating bookshelf: " + e.Message);
             }
         }
 
@@ -206,9 +215,7 @@ namespace bookshelf_aws_app
             {
                 ISBN = "0743273567",
                 Title = "The Great Gatsby",
-                Authors = new List<string> { "F. Scott Fitzgerald" },
-                LastViewedPage = 1,
-                ClosingTime = DateTime.UtcNow.ToString()
+                Authors = new List<string> { "F. Scott Fitzgerald" }
             });
 
             bookList.Add(new Book
@@ -235,7 +242,11 @@ namespace bookshelf_aws_app
         }
 
         public async Task<List<Book>> GetBooksByUser(int userId) 
-        { 
+        {
+            // Access the DynamoDB context
+            var context = app.DynamoDbContext;
+
+            // Create a list to store the books
             var bookList = new List<Book>();
 
             try 
@@ -258,6 +269,9 @@ namespace bookshelf_aws_app
 
         public async Task<Bookshelf> GetBookshelfByUserId(int userId)
         {
+            // Access the DynamoDB context
+            var context = app.DynamoDbContext;
+
             // Query the Bookshelf table using the userId (assuming userId is the partition key)
             var bookshelf = await context.LoadAsync<Bookshelf>(userId);
 

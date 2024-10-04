@@ -25,7 +25,7 @@ namespace bookshelf_aws_app
     {
 
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
-        DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        DynamoDBBookshelfOperation dynamoDBBookselfOperation = new DynamoDBBookshelfOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         private App app;
         public string tableName = "Bookshelf";

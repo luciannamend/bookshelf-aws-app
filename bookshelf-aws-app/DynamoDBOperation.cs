@@ -6,6 +6,7 @@ using System.IO;
 using Amazon.S3;
 using Amazon.S3.Model;
 using System.Diagnostics;
+using System.Net;
 
 namespace bookshelf_aws_app
 {
@@ -18,13 +19,20 @@ namespace bookshelf_aws_app
     class DynamoDBOperation
     {
         AmazonS3Client s3Client;
+        Amazon.Runtime.BasicAWSCredentials credentials;
         private App app;
 
         public DynamoDBOperation()
         {
             app = (App)Application.Current;
-            var credentials = app.AwsCredentials;
-            s3Client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.GetBySystemName(ConfigurationManager.AppSettings["AWSRegion"]));
+
+            credentials = new Amazon.Runtime.BasicAWSCredentials
+                (
+                    ConfigurationManager.AppSettings["accessId"], 
+                    ConfigurationManager.AppSettings["secretKey"]
+                );
+
+            s3Client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.USEast1);
         }
 
         // Method to check the table status
