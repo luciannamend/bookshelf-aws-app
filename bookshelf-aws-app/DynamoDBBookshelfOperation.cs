@@ -108,6 +108,7 @@ namespace bookshelf_aws_app
 
                     if (existingBookshelf != null)
                     {
+                        Debug.WriteLine($"Bookshelf already exists");
                         return;
                     }
 
@@ -192,7 +193,7 @@ namespace bookshelf_aws_app
             }
         }
 
-        // Create a list of random bookList
+        // Create a list of random books
         public static List<Book> CreateBooksList()
         {
             List<Book> bookList = new List<Book>();
