@@ -11,20 +11,33 @@ namespace bookshelf_aws_app
     internal class Bookshelf
     {
         // Partition key
-        [DynamoDBHashKey]
-        public string UserId { get; set; }
+        [DynamoDBHashKey("UserId")]
+        public int UserId { get; set; }
 
         [DynamoDBProperty("Books")]
         public List<Book> Books { get; set; }
-
-        [DynamoDBProperty("LastViewedPage")]
-        public int LastViewedPage { get; set; }
     }
 
     class Book
     {
+        [DynamoDBProperty("ISBN")]
         public string ISBN { get; set; }
+
+        [DynamoDBProperty("Title")]
         public string Title { get; set; }
+
+        [DynamoDBProperty("Authors")]
         public List<string> Authors { get; set; }
+
+        [DynamoDBProperty("LastViewedPage")]
+        public int? LastViewedPage { get; set; }
+
+        [DynamoDBProperty("ClosingTime")]
+        public string? ClosingTime { get; set; }
+
+        public int? GetLastViewedPage()
+        {
+            return LastViewedPage;
+        }
     }
 }

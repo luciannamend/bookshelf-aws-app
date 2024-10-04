@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2.Model;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace bookshelf_aws_app
                     new AttributeDefinition
                     {
                         AttributeName="Id",
-                        AttributeType="S"
+                        AttributeType="N"
                     }
                 },
                 KeySchema = new List<KeySchemaElement>
@@ -89,9 +90,9 @@ namespace bookshelf_aws_app
         {
             List<User> users = new List<User>();
 
-            users.Add(new User { Id = "1", UserName = "user1", Password = "password1" });
-            users.Add(new User { Id = "2", UserName = "user2", Password = "password2" });
-            users.Add(new User { Id = "3", UserName = "user3", Password = "password3" });
+            users.Add(new User { Id = 1, UserName = "user1", Password = "password1" });
+            users.Add(new User { Id = 2, UserName = "user2", Password = "password2" });
+            users.Add(new User { Id = 3, UserName = "user3", Password = "password3" });
 
             foreach (User user in users)
             {
@@ -100,7 +101,7 @@ namespace bookshelf_aws_app
         }
 
         // Create a new user
-        public async Task CreateUserAsync(string id, string username, string password)
+        public async Task CreateUserAsync(int id, string username, string password)
         {
             try
             {
@@ -140,26 +141,40 @@ namespace bookshelf_aws_app
         // Retrieve user by username
         public async Task<User> GetUserByUsername(string username)
         {
-            // Create the condition to find the user by username in the 'User' table
-            var conditions = new List<ScanCondition>
+            try 
             {
-                new ScanCondition("UserName", ScanOperator.Equal, username)
-            };
+                // Create the condition to find the user by username in the 'User' table
+                var conditions = new List<ScanCondition>
+                {
+                    new ScanCondition("UserName", ScanOperator.Equal, username)
+                };
 
-            // Scan to find the user by username
-            var search = context.ScanAsync<User>(conditions);
+                // Scan to find the user by username
+                var search = context.ScanAsync<User>(conditions);
 
-            // Get the result of the scan
-            var result = await search.GetNextSetAsync();
+                //MessageBox.Show("Searching for user: " + username);
 
-            // If the result is not empty, return the first user
-            if (result.Count > 0)
-            {
-                return result.First();
+                Debug.WriteLine("Searching for user: " + username);
+
+                // Get the result of the scan
+                var result = await search.GetNextSetAsync(); // CODE BREAKS HERE
+
+                //MessageBox.Show("Result count: " + result.Count);
+
+                // If the result is not empty, return the first user
+                if (result.Count > 0)
+                {
+                    return result.First();
+                }
+
+                // Return null if no user found
+                return null;
             }
-
-            // Return null if no user found
-            return null;
+            catch (Exception e)
+            {
+                MessageBox.Show("Error : " + e.Message);
+                return null;
+            }
         }
 
         // Get all users
@@ -173,30 +188,6 @@ namespace bookshelf_aws_app
 
             // Return the list of users
             return result;
-        }
-
-        // Update user by id
-        public async Task UpdateUserAsync(string id, string username, string password)
-        {
-            User user = await context.LoadAsync<User>(id);
-            user.UserName = username;
-            user.Password = password;
-
-            await context.SaveAsync(user);
-        }
-
-        // Delete user by id
-        public async Task DeleteUserByIdAsync(string id)
-        {
-            await context.DeleteAsync<User>(id);
-
-            User deletedUser = await context.LoadAsync<User>(id, new DynamoDBContextConfig
-            {
-                ConsistentRead = true
-            });
-
-            if (deletedUser == null)
-                Console.WriteLine("User has been deleted");
         }
     }
 }

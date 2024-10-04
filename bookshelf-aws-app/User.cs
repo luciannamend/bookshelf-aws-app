@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace bookshelf_aws_app
 {
     [DynamoDBTable("User")]
-    internal class User
+    class User
     {
         [DynamoDBHashKey("Id")] //Partition key
-        public string Id {get; set;}
+        public int Id {get; set;}
 
         [DynamoDBProperty("UserName")]
         public string UserName {get; set;}

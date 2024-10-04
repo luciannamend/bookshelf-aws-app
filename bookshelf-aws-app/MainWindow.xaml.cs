@@ -19,6 +19,7 @@ namespace bookshelf_aws_app
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
+        Random random = new Random();
         public MainWindow()
         {
             InitializeComponent();
@@ -50,7 +51,7 @@ namespace bookshelf_aws_app
         {
             String username = UserNameText.Text;
             String password = UserPasswordText.Text;
-            String id = Guid.NewGuid().ToString();
+            int id = random.Next(100, 1001);
 
             if (username == "" || password == "")
             {

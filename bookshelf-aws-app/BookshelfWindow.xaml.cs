@@ -26,7 +26,9 @@ namespace bookshelf_aws_app
 
         public string Username { get; }
 
-        public BookshelfWindow() {}
+        public BookshelfWindow() 
+        {
+        }
 
         public BookshelfWindow(string username)
         {
@@ -66,16 +68,18 @@ namespace bookshelf_aws_app
             this.Close();
         }
 
-        private async Task PopulateDataGrid(string username)
+        public async Task PopulateDataGrid(string username)
         {
             // get the user
             User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
             // and its id
-            string userId = retreivedUser.Id;
+            int userId = retreivedUser.Id;
             // get the list of books by user id
             List<Book> bookList = await dynamoDBBookselfOperation.GetBooksByUser(userId);
+            // Sort the books by ClosingTime (most recent first)
+            var sortedBookList = bookList.OrderByDescending(book => book.ClosingTime).ToList();
             // display on data grid
-            BookshelfDataGrid.ItemsSource = bookList;
+            BookshelfDataGrid.ItemsSource = sortedBookList;
         }
     }
 }

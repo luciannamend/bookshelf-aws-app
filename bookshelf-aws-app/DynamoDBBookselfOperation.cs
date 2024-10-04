@@ -47,7 +47,7 @@ namespace bookshelf_aws_app
                     new AttributeDefinition
                     {
                         AttributeName="UserId",
-                        AttributeType="S"
+                        AttributeType="N"
                     }
                 },
                 KeySchema = new List<KeySchemaElement>
@@ -102,10 +102,7 @@ namespace bookshelf_aws_app
 
                     if (existingBookshelf != null)
                     {
-                        foreach (var existingBook in existingBookshelf.Books)
-                        {
-                            existingBookTitles.Add(existingBook.Title);
-                        }
+                        return;
                     }
 
                     List<Book> booksToInsert = new List<Book>();
@@ -146,17 +143,38 @@ namespace bookshelf_aws_app
             }
         }
 
-        public async void AddLastViewedPageNumber(string userId, int lastViewedPageNumber)
+        public async Task AddLastViewedPageNumber(int userId, string selectedTitle, int lastViewedPageNumber, DateTime closingTime)
         {
             try
             {
+                // Load the bookshelf associated with the given userId
                 var bookshelf = await context.LoadAsync<Bookshelf>(userId);
 
-                if (bookshelf != null)
+                // Check if the bookshelf exists
+                if (bookshelf != null && bookshelf.Books != null)
                 {
-                    bookshelf.Books = bookshelf.Books;
-                    bookshelf.LastViewedPage = lastViewedPageNumber;
-                    await context.SaveAsync(bookshelf);
+                    // Find the book by ISBN in the bookshelf
+                    var book = bookshelf.Books.FirstOrDefault(b => b.Title == selectedTitle);
+
+                    if (book != null)
+                    {
+                        // Update the last viewed page and closing time for the book
+                        book.LastViewedPage = lastViewedPageNumber;
+                        book.ClosingTime = closingTime.ToString();
+
+                        // Save the updated bookshelf to DynamoDB
+                        await context.SaveAsync(bookshelf);
+
+                        MessageBox.Show("Your book on the Bookshelf was updated successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Book not found in the bookshelf.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Bookshelf not found for the given user ID.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception e)
@@ -188,7 +206,9 @@ namespace bookshelf_aws_app
             {
                 ISBN = "0743273567",
                 Title = "The Great Gatsby",
-                Authors = new List<string> { "F. Scott Fitzgerald" }
+                Authors = new List<string> { "F. Scott Fitzgerald" },
+                LastViewedPage = 1,
+                ClosingTime = DateTime.UtcNow.ToString()
             });
 
             bookList.Add(new Book
@@ -214,13 +234,16 @@ namespace bookshelf_aws_app
             return bookList;
         }
 
-        public async Task<List<Book>> GetBooksByUser(string userId) 
+        public async Task<List<Book>> GetBooksByUser(int userId) 
         { 
             var bookList = new List<Book>();
 
             try 
             {
-                var bookshelf = await context.LoadAsync<Bookshelf>(userId);
+                var bookshelf = await context.LoadAsync<Bookshelf>(userId, new DynamoDBOperationConfig
+                {
+                    ConsistentRead = true
+                });
 
                 bookList = bookshelf.Books;
             }
