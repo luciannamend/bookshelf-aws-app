@@ -62,12 +62,6 @@ namespace bookshelf_aws_app
             string bucketName = "bookshelf-app-book-list";
             string objectKey = title;
 
-
-            // load books'last viewed page data from bookshelf table
-            //// GET THE BOOK INSTANCE
-            //Book book = dynamoDBBookselfOperation.GetBook(title);
-            //int? lastViewedPage = book.GetLastViewedPage();
-
             try
             {
                 // Fetch the PDF from S3
