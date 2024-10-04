@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace bookshelf_aws_app
 {
     [DynamoDBTable("User")]
-    class User
+    public class User
     {
         [DynamoDBHashKey("Id")] //Partition key
         public int Id {get; set;}

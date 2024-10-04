@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace bookshelf_aws_app
 {
     [DynamoDBTable("Bookshelf")]
-    internal class Bookshelf
+    public class Bookshelf
     {
         // Partition key
         [DynamoDBHashKey("UserId")]
@@ -18,7 +18,7 @@ namespace bookshelf_aws_app
         public List<Book> Books { get; set; }
     }
 
-    class Book
+    public class Book
     {
         [DynamoDBProperty("ISBN")]
         public string ISBN { get; set; }
@@ -34,10 +34,5 @@ namespace bookshelf_aws_app
 
         [DynamoDBProperty("ClosingTime")]
         public string? ClosingTime { get; set; }
-
-        public int? GetLastViewedPage()
-        {
-            return LastViewedPage;
-        }
     }
 }

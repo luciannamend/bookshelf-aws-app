@@ -1,18 +1,12 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace bookshelf_aws_app
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Serves as the login interface, initializing AWS DynamoDB operations upon loading. 
+    /// It creates the User table, inserts sample users, and enables the Login button only after successful setup.
+    /// User logs in by entering their credentials, which are validated against the DynamoDB database;
+    /// Additionally, users can create new accounts, existing usernames are checked to avoid duplicates. 
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -20,13 +14,16 @@ namespace bookshelf_aws_app
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
         Random random = new Random();
+        private TaskCompletionSource<bool> _usersCreated = new TaskCompletionSource<bool>();
+        public string tableName = "User";
+
         public MainWindow()
         {
             InitializeComponent();
             InitializeDynamoDBAsync();
         }
 
-        // Create the User table programatically
+        // Initialize DynamoDB async operations
         private async void InitializeDynamoDBAsync()
         {            
             try 
@@ -35,81 +32,108 @@ namespace bookshelf_aws_app
                 await dynamoDBUserOperation.CreateUserTableAsync();
 
                 // check if it is created
-                await dynamoDBOperation.WaitForTableToBeActiveAsync("User");
+                await dynamoDBOperation.WaitForTableToBeActiveAsync(tableName);
 
-                // if ready, create three users
-                dynamoDBUserOperation.CreateThreeUsersAsync();
+                // if ready, insert three users
+                await dynamoDBUserOperation.CreateThreeUsersAsync();
+
+                // set the TaskCompletionSource to true when users are successfully created
+                _usersCreated.SetResult(true);
+
+                // enable the LoginButton after users are created
+                LoginButton.IsEnabled = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error creating User table: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error creating User table: " + ex.Message, 
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
+                // set TaskCompletionSource to false on failure
+                _usersCreated.SetResult(false);
             }
         }
 
-        // Create login button
+        // CreateLogin button click handler
         private async void CreateLoginButton_Click(object sender, RoutedEventArgs e)
         {
-            String username = UserNameText.Text;
-            String password = UserPasswordText.Text;
+            // get username and password
+            string username = UserNameText.Text;
+            string password = UserPasswordText.Text;
+
+            // create random id
             int id = random.Next(100, 1001);
 
+            // check if the text boxes are empty
             if (username == "" || password == "")
             {
                 MessageBox.Show("Please enter a valid username and password.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            // Check if the user exists in the database
+            // check if the user exists in the database
             User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
-            
+
+            // if user exists, return
             if (retreivedUser != null)
             {
                 MessageBox.Show("User already exist", "Existent user", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
+            // create new user
             await dynamoDBUserOperation.CreateUserAsync(id, username, password); 
         }
 
-        // Login button
+        // Login button click handler
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            // Validate the user credentials
+            // get the user credentials
             string username = UserNameText.Text;
             string password = UserPasswordText.Text;
 
-            // Check if the user credentials are valid
-            bool isUserValid = await IsUserValidAsync(username, password);
+            // Validate the user credentials
+            User retrievedUser = await GetValidUser(username, password);
 
-            // If invalid, return
-            if (isUserValid == false)
+            if (retrievedUser == null)
             {
-                return;
+                // Invalid credentials
+                MessageBox.Show("Invalid credentials. Please check your username and password.", 
+                    "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return; 
             }
 
-            // If valid, open the BookListWindow
-            BookshelfWindow bookshelfWindow = new BookshelfWindow(username);
+            // set the CurrentUser in the App class to make it accessible globally
+            var app = (App)Application.Current;
+            app.CurrentUser = retrievedUser;            
+
+            // open the BookshelfWindow and close the login window
+            BookshelfWindow bookshelfWindow = new BookshelfWindow();
             bookshelfWindow.Show();
             this.Close();
         }
 
         // Method to validate the user credentials
-        private async Task<bool> IsUserValidAsync(string username, string password)
-        {       
+        private async Task<User> GetValidUser(string username, string password)
+        {
+            // get user by username
             User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
-            // Check if the user exists in the database
+
+            // if user is not null (exists)
             if (retreivedUser != null)
             {
-                // If the user exists, check if the password is correct
+                // check if the password is correct
                 if (retreivedUser.Password == password)
                 {
-                    // If the password is correct, return true
-                    return true;
+                    // If the password is correct, return the existing user
+                    return retreivedUser;
                 }
             }
-            // Show authentication error, return false
-            MessageBox.Show("Authentication failed. Please check your username and password.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            return false;
-        }        
-    }
+            // If the user does not exist or the password is incorrect, show an error message
+            MessageBox.Show("Authentication failed. Please check your username and password.", 
+                "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            // and return null 
+            return null;
+        }
+    }    
 }

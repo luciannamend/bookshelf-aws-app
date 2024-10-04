@@ -255,5 +255,13 @@ namespace bookshelf_aws_app
             return bookList;
 
         }
+
+        public async Task<Bookshelf> GetBookshelfByUserId(int userId)
+        {
+            // Query the Bookshelf table using the userId (assuming userId is the partition key)
+            var bookshelf = await context.LoadAsync<Bookshelf>(userId);
+
+            return bookshelf;
+        }
     }
 }

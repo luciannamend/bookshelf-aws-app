@@ -86,7 +86,7 @@ namespace bookshelf_aws_app
         }
 
         // Create three users programatically 
-        public async void CreateThreeUsersAsync()
+        public async Task CreateThreeUsersAsync()
         {
             List<User> users = new List<User>();
 
