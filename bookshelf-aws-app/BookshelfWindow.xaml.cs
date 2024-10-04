@@ -15,7 +15,11 @@ using System.Windows.Shapes;
 namespace bookshelf_aws_app
 {
     /// <summary>
-    /// Interaction logic for BookshelfWindow.xaml
+    /// Manages the user's bookshelf. It initializes the connection to a DynamoDB database to 
+    /// create and maintain a bookshelf table. Upon instantiation, it checks for existing books 
+    /// associated with the logged-in user and populates a data grid with this information. 
+    /// The class also handles user interactions, allowing users to double-click on a book entry 
+    /// to open a new window that displays the selected book's content
     /// </summary>
     public partial class BookshelfWindow : Window
     {
@@ -23,63 +27,89 @@ namespace bookshelf_aws_app
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBBookselfOperation dynamoDBBookselfOperation = new DynamoDBBookselfOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
+        private App app;
+        public string tableName = "Bookshelf";
 
-        public string Username { get; }
-
-        public BookshelfWindow() 
+        public BookshelfWindow()
         {
-        }
-
-        public BookshelfWindow(string username)
-        {
-            Username = username;
-
             InitializeComponent();
+            app = (App)Application.Current;
             InitializeDynamoDB();
         }
 
+        // CHECK 
+        public BookshelfWindow(string username) : this() { }
+
         private async void InitializeDynamoDB()
         {
-            string tableName = "Bookshelf";
+            try
+            {
+                // create and wait for the Bookshelf table to be active
+                await dynamoDBBookselfOperation.CreateBookshelfTableAsync();
+                await dynamoDBOperation.WaitForTableToBeActiveAsync(tableName);
 
-            await dynamoDBBookselfOperation.CreateBookshelfTableAsync();
+                // insert books into the bookshelf table
+                await dynamoDBBookselfOperation.InsertBooks();
 
-            await dynamoDBOperation.WaitForTableToBeActiveAsync(tableName);
-
-            await dynamoDBBookselfOperation.InsertBooks();
-
-            await PopulateDataGrid(Username);
+                // populate the data grid with books for the current user
+                await PopulateDataGrid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing database: {ex.Message}", 
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // Select book click handler
         private void BooksDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e)
         {
-            Book selectedBook = (Book)BookshelfDataGrid.SelectedItem;
+            // check if selected and open the selected book
+            if (BookshelfDataGrid.SelectedItem is Book selectedBook)
+            {
+                MessageBox.Show($"Opening book: \n{selectedBook.Title}"); // |||||||||   DEBUG  |||||||||
 
-            if (selectedBook == null)
+                // pass the user and selected book title to the ViewPDFWindow
+                var viewPDFWindow = new ViewPDFWindow(selectedBook.Title, app.CurrentUser.UserName);
+                viewPDFWindow.Show();
+                this.Close();
+            }
+            else
             {
                 MessageBox.Show("Please select a book to read");
-                return;
             }
-
-            MessageBox.Show("Opening book: \n" + selectedBook.Title);
-
-            ViewPDFWindow viewPDFWindow = new ViewPDFWindow(selectedBook.Title, Username);
-            viewPDFWindow.Show();
-            this.Close();
         }
 
-        public async Task PopulateDataGrid(string username)
+        // populates the data grid according to the most recent read books
+        public async Task PopulateDataGrid()
         {
-            // get the user
-            User retreivedUser = await dynamoDBUserOperation.GetUserByUsername(username);
-            // and its id
-            int userId = retreivedUser.Id;
-            // get the list of books by user id
-            List<Book> bookList = await dynamoDBBookselfOperation.GetBooksByUser(userId);
-            // Sort the books by ClosingTime (most recent first)
-            var sortedBookList = bookList.OrderByDescending(book => book.ClosingTime).ToList();
-            // display on data grid
-            BookshelfDataGrid.ItemsSource = sortedBookList;
+            try
+            {
+                // get the user
+                User retrievedUser = app.CurrentUser;
+
+                // get the list of books by user id
+                List<Book> bookList = await dynamoDBBookselfOperation.GetBooksByUser(retrievedUser.Id);
+
+                // if there are no books
+                if (bookList == null || bookList.Count == 0)
+                {
+                    MessageBox.Show("No books found for the current user.",
+                        "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // sort the books by ClosingTime (most recent first)
+                var sortedBookList = bookList.OrderByDescending(book => book.ClosingTime).ToList();
+
+                // display on data grid
+                BookshelfDataGrid.ItemsSource = sortedBookList;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error populating data grid: {ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
