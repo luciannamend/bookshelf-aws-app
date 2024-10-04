@@ -1,40 +1,36 @@
-﻿using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2;
-using System;
-using System.Collections.Generic;
+﻿using Amazon.DynamoDBv2;
 using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
-using Amazon.DynamoDBv2.DocumentModel;
 using System.Windows;
 using System.IO;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.Runtime;
-using System.IO.Packaging;
+using System.Diagnostics;
 
 namespace bookshelf_aws_app
 {
+    /// <summary>
+    /// Provides methods for interacting with AWS DynamoDB and S3 services. Includes asynchronous methods
+    /// to check the status of a DynamoDB table and verify its existence by listing available tables.
+    /// Additionally, it has a method to retrieve a PDF file from an S3 bucket, converting the file's stream
+    /// into a MemoryStream for easy access and manipulation. 
+    /// </summary>
     class DynamoDBOperation
     {
-        AmazonDynamoDBClient client;
-        DynamoDBContext context;
-        Amazon.Runtime.BasicAWSCredentials credentials;
         AmazonS3Client s3Client;
+        private App app;
 
         public DynamoDBOperation()
         {
-            credentials = new Amazon.Runtime.BasicAWSCredentials(ConfigurationManager.AppSettings["accessId"], ConfigurationManager.AppSettings["secretKey"]);
-            client = new AmazonDynamoDBClient(credentials, Amazon.RegionEndpoint.USEast1);
-            context = new DynamoDBContext(client);
-            s3Client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.USEast1);
+            app = (App)Application.Current;
+            var credentials = app.AwsCredentials;
+            s3Client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.GetBySystemName(ConfigurationManager.AppSettings["AWSRegion"]));
         }
 
         // Method to check the table status
         public async Task WaitForTableToBeActiveAsync(string tableName)
         {
+            var client = app.DynamoDbClient;
             bool isTableActive = false;
 
             while (!isTableActive)
@@ -59,6 +55,7 @@ namespace bookshelf_aws_app
         // Check if a table exists
         public async Task<bool> DoesTableExistAsync(string tableName) 
         {
+            var client = app.DynamoDbClient;
             // list tables
             var tables = await client.ListTablesAsync();
             // true if the table is on the list
@@ -67,34 +64,40 @@ namespace bookshelf_aws_app
 
         // Method to get a PDF from S3
         public async Task<MemoryStream> GetPdfFromS3Async(string bucketName, string objectKey)
-        {        
+        {
+            // full key for the PDF file in S3 - match exact name
             string key = objectKey + ".pdf";
 
             try
             {
-                // Create the request to get the object
+                // create the request to get the object
                 var request = new GetObjectRequest
                 {
                     BucketName = bucketName,
                     Key = key
                 };
 
-                // Get the object from S3
-                using (var response = await s3Client.GetObjectAsync(request))
+                // get the object from S3
+                using var response = await s3Client.GetObjectAsync(request);
 
-                using (var responseStream = response.ResponseStream)
-                {
-                    // Copy the response stream to a MemoryStream
-                    MemoryStream documentStream = new MemoryStream();
-                    await responseStream.CopyToAsync(documentStream);
-                    documentStream.Position = 0; // Reset position to the beginning
-                    return documentStream;
-                }
+                // get the response stream
+                using var responseStream = response.ResponseStream;
+
+                // create a MemoryStream to store the PDF
+                MemoryStream documentStream = new MemoryStream();
+
+                // copy the response stream to a MemoryStream
+                await responseStream.CopyToAsync(documentStream);
+
+                // reset position to the beginning
+                documentStream.Position = 0;
+
+                // return the MemoryStream containing the PDF
+                return documentStream;
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., log the error)
-                Console.WriteLine($"Error fetching PDF from S3: {ex.Message}");
+                Debug.WriteLine($"Error fetching PDF from S3: {ex.Message}");
                 return null;
             }
         }
