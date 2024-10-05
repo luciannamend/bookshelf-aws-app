@@ -19,7 +19,6 @@ namespace bookshelf_aws_app
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         private App app;
         public string tableName = "Bookshelf";
-        public string userIdAttribute = "UserId";
 
         public DynamoDBBookshelfOperation()
         {
@@ -43,10 +42,10 @@ namespace bookshelf_aws_app
             {
                 TableName = tableName,
                 AttributeDefinitions = new List<AttributeDefinition>
-                {   
+                {
                     new AttributeDefinition
                     {
-                        AttributeName = userIdAttribute,
+                        AttributeName="UserId",
                         AttributeType="N"
                     }
                 },
@@ -54,7 +53,7 @@ namespace bookshelf_aws_app
                 {
                     new KeySchemaElement
                     {
-                        AttributeName = userIdAttribute,
+                        AttributeName="UserId",
                         KeyType="HASH"
                     }
                 },
@@ -103,21 +102,17 @@ namespace bookshelf_aws_app
                     // load the bookshelf associated with userId
                     var existingBookshelf = await context.LoadAsync<Bookshelf>(user.Id);
 
-                    // set current bookshelf
-                    existingBookshelf = app.CurrentBookshelf;
-
                     // create a hashset to store existing book titles
                     HashSet<string> existingBookTitles = new HashSet<string>();
 
                     if (existingBookshelf != null)
                     {
-                        Debug.WriteLine($"Bookshelf already exists");
                         return;
                     }
 
                     List<Book> booksToInsert = new List<Book>();
 
-                    foreach (var book in books) 
+                    foreach (var book in books)
                     {
                         if (!existingBookTitles.Contains(book.Title))
                         {
@@ -196,7 +191,7 @@ namespace bookshelf_aws_app
             }
         }
 
-        // Create a list of random books
+        // Create a list of random bookList
         public static List<Book> CreateBooksList()
         {
             List<Book> bookList = new List<Book>();
@@ -205,7 +200,7 @@ namespace bookshelf_aws_app
             {
                 ISBN = "9780451531384",
                 Title = "A Room With a View",
-                Authors = new List<string> { "E. M. Forster"}
+                Authors = new List<string> { "E. M. Forster" }
             });
 
             bookList.Add(new Book
@@ -245,7 +240,7 @@ namespace bookshelf_aws_app
             return bookList;
         }
 
-        public async Task<List<Book>> GetBooksByUser(int userId) 
+        public async Task<List<Book>> GetBooksByUser(int userId)
         {
             // Access the DynamoDB context
             var context = app.DynamoDbContext;
@@ -253,7 +248,7 @@ namespace bookshelf_aws_app
             // Create a list to store the books
             var bookList = new List<Book>();
 
-            try 
+            try
             {
                 var bookshelf = await context.LoadAsync<Bookshelf>(userId, new DynamoDBOperationConfig
                 {

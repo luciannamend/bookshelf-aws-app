@@ -11,20 +11,21 @@ namespace bookshelf_aws_app
     /// <summary>
     /// Interaction logic for ViewPDFWindow.xaml
     /// </summary>
-    public class ViewPDFWindow : Window
+    public partial class ViewPDFWindow : Window
     {
         DynamoDBOperation dynamoDBOperation = new DynamoDBOperation();
         DynamoDBBookshelfOperation dynamoDBBookselfOperation = new DynamoDBBookshelfOperation();
         DynamoDBUserOperation dynamoDBUserOperation = new DynamoDBUserOperation();
         BookshelfWindow BookshelfWindow = new BookshelfWindow();
 
-
+        // Property to hold the PDF document stream
         public MemoryStream DocumentStream { get; set; }
+
+        private int currentPageNumber;
         public string Username { get; set; }
         public string Title { get; set; }
-        public int lastViewedPage;
 
-        public ViewPDFWindow()
+        public ViewPDFWindow() 
         {
             InitializeComponent();
         }
@@ -34,29 +35,14 @@ namespace bookshelf_aws_app
             var app = (App)Application.Current;
 
             SyncfusionLicenseProvider.RegisterLicense(ConfigurationManager.AppSettings["syncfusionlicense"]);
-            Username = username;            
+            Username = username;
             Title = title;
 
-            // Load the last viewed page from the current bookshelf's specific book
-            lastViewedPage = GetLastViewedPageFromBookshelf(app.CurrentBookshelf, Title);
-
-            // load the PDF from s3 bucket
             LoadPDF(title);
-            // track page changes
             PDFViewer.CurrentPageChanged += PDFViewer_CurrentPageChanged;
         }
 
-        // get the last viewed page from the bookshelf
-        private int GetLastViewedPageFromBookshelf(Bookshelf bookshelf, string title)
-        {
-            // Find the book with the specified title
-            var book = bookshelf.Books.FirstOrDefault(b => b.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
-
-            // Return the LastViewedPage or 0 if the book is not found
-            return book?.LastViewedPage ?? 0; 
-        }
-
-        public async void LoadPDF(string title) 
+        public async void LoadPDF(string title)
         {
             string bucketName = "bookshelf-app-book-list";
             string objectKey = title;
@@ -71,16 +57,16 @@ namespace bookshelf_aws_app
                 {
                     // Set the ItemSource of the PDFViewer
                     PDFViewer.ItemSource = DocumentStream;
-                    PDFViewer.GotoPage(lastViewedPage);
+                    PDFViewer.GotoPage(currentPageNumber);
                 }
                 else
                 {
-                    Debug.WriteLine("Failed to load PDF document.");
+                    MessageBox.Show("Failed to load PDF document.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error to load PDF: {ex.Message}");
+                MessageBox.Show($"Error: {ex.Message}");
             }
 
         }
@@ -88,17 +74,16 @@ namespace bookshelf_aws_app
         // ||||||||||||||||  SAVING LAST PAGE VIEWED  ||||||||||||||||||  //
         private void PDFViewer_CurrentPageChanged(object sender, EventArgs e)
         {
-            // Small delay to allow the page to update properly
-            //Task.Delay(6000);
-            lastViewedPage = PDFViewer.CurrentPage;
+            Task.Delay(6000);  // Small delay to allow the page to update properly
+            currentPageNumber = PDFViewer.CurrentPage;
         }
 
         protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            DateTime closingTime = DateTime.Now;        
+            DateTime closingTime = DateTime.Now;
 
             // Save the current page number to persistent storage before closing
-            await SaveLastPage(lastViewedPage, closingTime);
+            await SaveLastPage(currentPageNumber, closingTime);
 
             BookshelfWindow bookshelfWindow = new BookshelfWindow(Username);
             bookshelfWindow.Show();
@@ -108,24 +93,24 @@ namespace bookshelf_aws_app
         {
             try
             {
-                // Access the current user from the global application instance
-                var app = (App)Application.Current;
-                User user = app.CurrentUser;
+                MessageBox.Show($"Attempting to save page number: {pageNumber}"); //debug
+
+                User user = await dynamoDBUserOperation.GetUserByUsername(Username);
 
                 if (user == null)
                 {
                     await Task.Delay(5000);
                 }
 
-                Debug.WriteLine($"Last page viewed: {pageNumber}, for userid: {user.Id}");
+                MessageBox.Show($"Last page viewed: {pageNumber}, for userid: {user.Id}");
 
                 await dynamoDBBookselfOperation.AddLastViewedPageNumber(user.Id, Title, pageNumber, closingTime);
 
             }
             catch (Exception e)
             {
-                Debug.WriteLine($"Error saving last page viewed: {e}");
-            }            
+                MessageBox.Show("Error saving last page viewed: " + e);
+            }
         }
-    }     
+    }
 }
