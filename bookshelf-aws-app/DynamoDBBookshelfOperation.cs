@@ -103,6 +103,9 @@ namespace bookshelf_aws_app
                     // load the bookshelf associated with userId
                     var existingBookshelf = await context.LoadAsync<Bookshelf>(user.Id);
 
+                    // set current bookshelf
+                    existingBookshelf = app.CurrentBookshelf;
+
                     // create a hashset to store existing book titles
                     HashSet<string> existingBookTitles = new HashSet<string>();
 

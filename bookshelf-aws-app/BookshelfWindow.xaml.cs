@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,8 +57,7 @@ namespace bookshelf_aws_app
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error initializing database: {ex.Message}", 
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Error initializing database: {ex.Message}");
             }
         }
 
@@ -67,8 +67,6 @@ namespace bookshelf_aws_app
             // check if selected and open the selected book
             if (BookshelfDataGrid.SelectedItem is Book selectedBook)
             {
-                MessageBox.Show($"Opening book: \n{selectedBook.Title}"); // |||||||||   DEBUG  |||||||||
-
                 // pass the user and selected book title to the ViewPDFWindow
                 var viewPDFWindow = new ViewPDFWindow(selectedBook.Title, app.CurrentUser.UserName);
                 viewPDFWindow.Show();
@@ -94,8 +92,7 @@ namespace bookshelf_aws_app
                 // if there are no books
                 if (bookList == null || bookList.Count == 0)
                 {
-                    MessageBox.Show("No books found for the current user.",
-                        "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Debug.WriteLine("No books found for the current user.");
                     return;
                 }
 
@@ -107,7 +104,7 @@ namespace bookshelf_aws_app
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error populating data grid: {ex.Message}",
+                Debug.WriteLine($"Error populating data grid: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
