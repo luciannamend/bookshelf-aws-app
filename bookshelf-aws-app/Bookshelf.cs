@@ -30,7 +30,7 @@ namespace bookshelf_aws_app
         public List<string> Authors { get; set; }
 
         [DynamoDBProperty("LastViewedPage")]
-        public int? LastViewedPage { get; set; }
+        public int LastViewedPage { get; set; }
 
         [DynamoDBProperty("ClosingTime")]
         public string? ClosingTime { get; set; }

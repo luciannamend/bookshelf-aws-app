@@ -67,8 +67,10 @@ namespace bookshelf_aws_app
             // check if selected and open the selected book
             if (BookshelfDataGrid.SelectedItem is Book selectedBook)
             {
+                int lastViewedPage = selectedBook.LastViewedPage;
+
                 // pass the user and selected book title to the ViewPDFWindow
-                var viewPDFWindow = new ViewPDFWindow(selectedBook.Title, app.CurrentUser.UserName);
+                var viewPDFWindow = new ViewPDFWindow(selectedBook.Title, app.CurrentUser.UserName, lastViewedPage);
                 viewPDFWindow.Show();
                 this.Close();
             }
