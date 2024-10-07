@@ -5,6 +5,9 @@ using System.Configuration;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2;
 using System.Diagnostics;
+using Syncfusion.Pdf.Interactive;
+using Syncfusion.Pdf.Parsing;
+using System.Drawing;
 
 namespace bookshelf_aws_app
 {
@@ -46,6 +49,7 @@ namespace bookshelf_aws_app
             // Load the PDF and set up event handler for page change
             LoadPDF(title);
             PDFViewer.CurrentPageChanged += PDFViewer_CurrentPageChanged;
+            
         }
 
         public async void LoadPDF(string title)
@@ -66,6 +70,9 @@ namespace bookshelf_aws_app
                 {
                     // Set the ItemSource of the PDFViewer
                     PDFViewer.ItemSource = DocumentStream;
+                    // enabled bookmark btn
+                    PDFViewer.IsBookmarkEnabled = true;
+
                     // go to the last viewed page
                     PDFViewer.GotoPage(CurrentPageNumber);
                 }
@@ -79,6 +86,7 @@ namespace bookshelf_aws_app
             {
                 Debug.WriteLine($"Error: {ex.Message}");
             }
+
         }
 
         private void PDFViewer_CurrentPageChanged(object sender, EventArgs e)
@@ -121,6 +129,24 @@ namespace bookshelf_aws_app
             {
                 Debug.WriteLine("Error saving last page viewed: " + e);
             }
+        }
+
+
+        private void BookmarkButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Insert a bookmark at the current page
+            InsertBookmarks();
+        }
+
+        private async Task InsertBookmarks()
+        {
+            //Get the loadedDocument object from PDF Viewer
+            PdfLoadedDocument pdfLoadedDocument = PDFViewer.LoadedDocument;
+            PdfBookmark bookmark = pdfLoadedDocument.Bookmarks.Insert(CurrentPageNumber, "Last Viewed Page");
+            bookmark.Destination = new PdfDestination(pdfLoadedDocument.Pages[CurrentPageNumber]);
+            bookmark.TextStyle = PdfTextStyle.Bold;
+            bookmark.Color = Color.Green;
+
         }
     }
 }
