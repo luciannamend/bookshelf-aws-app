@@ -2,7 +2,7 @@
 
 The project demonstrates how to use AWS DynamoDB for user authentication and bookshelf management, while the books themselves are stored in an AWS S3 bucket. This eBook reader app integrates multiple AWS services, following the specified lab guidelines.
 
-Project Features
+**Project Features**
 1. User Authentication
 - DynamoDB Table Creation: The application programmatically creates a DynamoDB table to store user credentials (username and password) using C#.
 - Data Insertion: Inserts at least three login credentials into the DynamoDB table.
@@ -21,16 +21,16 @@ Project Features
 - Bookmark Functionality: The app updates the user's reading progress (bookmarked page and time) when the user closes the reading window.
 - Data Storage: The current page number, bookmark time, and other reading progress information are stored in the DynamoDB table for each book.
 
-Technology Stack
+**Technology Stack**
   - C# with WPF for the desktop application.
   - AWS SDK for .NET to interact with DynamoDB.
   - Syncfusion.PdfViewer for displaying PDF book content.
   - AWS DynamoDB for user and bookshelf data storage.
   - AWS S3 Buckets for storing the actual book files.
     
-How to Use
-Login: Users must log in with their credentials stored in the DynamoDB table.
-Create Account: Users can create a new account (empty bookshelf)
-Bookshelf View: After logging in, the user’s bookshelf is displayed, showing all books with the most recent one at the top.
-Reading Books: Users can double-click on a book to start reading.
-Bookmarking Progress: The user's reading progress is automatically bookmarked when they close the reading window.
+**How to Use**
+ - Login: Users must log in with their credentials stored in the DynamoDB table.
+ - Create Account: Users can create a new account (empty bookshelf)
+ - Bookshelf View: After logging in, the user’s bookshelf is displayed, showing all books with the most recent one at the top.
+ - Reading Books: Users can double-click on a book to start reading.
+ - Bookmarking Progress: The user's reading progress is automatically bookmarked when they close the reading window.
