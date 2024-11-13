@@ -34,3 +34,8 @@ The project demonstrates how to use AWS DynamoDB for user authentication and boo
  - Bookshelf View: After logging in, the user’s bookshelf is displayed, showing all books with the most recent one at the top.
  - Reading Books: Users can double-click on a book to start reading.
  - Bookmarking Progress: The user's reading progress is automatically bookmarked when they close the reading window.
+
+
+**Disclaimer**
+
+This project is a demonstration of AWS capabilities for building an eBook reader application. Please note that I do not provide long-term maintenance for the AWS S3 storage of book files or DynamoDB tables for user credentials and bookshelf data, as this would incur storage and maintenance costs. If you intend to deploy this project, you will need to set up and fund your own AWS resources, including S3 for book storage and DynamoDB for user and bookshelf data.
