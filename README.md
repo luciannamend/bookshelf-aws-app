@@ -1,6 +1,6 @@
 # bookshelf-aws-app
 
-The project demonstrates how to use AWS DynamoDB for user authentication and bookshelf management, while the books themselves are stored in an AWS S3 bucket. This eBook reader app integrates multiple AWS services, following the specified lab guidelines.
+The project demonstrates how to use AWS DynamoDB for user authentication and bookshelf management, while the books themselves are stored in an AWS S3 bucket. This eBook reader app integrates multiple AWS services as follows.
 
 **Project Features**
 1. User Authentication
